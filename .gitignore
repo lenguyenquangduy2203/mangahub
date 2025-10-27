@@ -1,0 +1,110 @@
+# ==============================
+# Go build and module artifacts
+# ==============================
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build cache and local test binaries
+*.log
+*.tmp
+*.prof
+*.pprof
+*.cover
+*.cov
+*.test
+*.modcache
+*.sum
+*.a
+
+# Go workspace and temporary directories
+bin/
+build/
+dist/
+coverage/
+tmp/
+cache/
+vendor/
+
+# ==============================
+# VS Code files
+# ==============================
+.vscode/
+.history/
+*.code-workspace
+
+# ==============================
+# macOS system files
+# ==============================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# macOS folder metadata
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+*.icloud
+.fseventsd
+.apdisk
+
+# ==============================
+# Logs and environments
+# ==============================
+*.log
+*.env
+*.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ==============================
+# Dependency / tooling caches
+# ==============================
+node_modules/
+.npm/
+.yarn/
+.pnpm/
+.idea/
+.gradle/
+.cache/
+.tmp/
+coverage/
+
+# ==============================
+# Miscellaneous
+# ==============================
+# Temporary files
+*~
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Backup and editor temp files
+*#*
+*.old
+*.save
+*.rej
+*.patch
+*.pid
+*.lock
+
+# ==============================
+# Optional: project-specific
+# ==============================
+# Uncomment if using SQLite or local DBs
+*.db
+*.sqlite
+*.sqlite3
+
+# Uncomment if you have custom config
+config.yaml
+config.local.yaml
