@@ -1,0 +1,4 @@
+.git
+docs/
+data/
+**/node_modules

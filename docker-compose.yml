@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  api-server:
+    build:
+      context: ./cmd/api-server
+      dockerfile: Dockerfile
+    container_name: mangahub-api
+    environment:
+      - PORT=${API_PORT}
+    ports:
+      - "${API_PORT}:${API_PORT}"
+
+  tcp-server:
+    build:
+      context: ./cmd/tcp-server
+      dockerfile: Dockerfile
+    container_name: mangahub-tcp
+    environment:
+      - PORT=${TCP_PORT}
+    ports:
+      - "${TCP_PORT}:${TCP_PORT}"
+
+  udp-server:
+    build:
+      context: ./cmd/udp-server
+      dockerfile: Dockerfile
+    container_name: mangahub-udp
+    environment:
+      - PORT=${UDP_PORT}
+    ports:
+      - "${UDP_PORT}:${UDP_PORT}/udp"
+
+  grpc-server:
+    build:
+      context: ./cmd/grpc-server
+      dockerfile: Dockerfile
+    container_name: mangahub-grpc
+    environment:
+      - PORT=${GRPC_PORT}
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
