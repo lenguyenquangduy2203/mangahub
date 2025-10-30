@@ -1,13 +1,28 @@
 version: "3.9"
 
 services:
+  db-init:
+    build:
+      context: ./data
+    container_name: mangahub-db-init
+    volumes:
+      - ./data:/data
+    environment:
+      - DB_PATH=${DB_PATH}
+      - SQL_FILE=${SQL_FILE}
+    restart: "no"
   api-server:
     build:
       context: ./cmd/api-server
       dockerfile: Dockerfile
     container_name: mangahub-api
+    depends_on:
+      - db-init
+    volumes:
+      - ./data:/data
     environment:
       - PORT=${API_PORT}
+      - DB_PATH=${DB_PATH}
     ports:
       - "${API_PORT}:${API_PORT}"
 
@@ -16,8 +31,13 @@ services:
       context: ./cmd/tcp-server
       dockerfile: Dockerfile
     container_name: mangahub-tcp
+    depends_on:
+      - db-init
+    volumes:
+      - ./data:/data
     environment:
       - PORT=${TCP_PORT}
+      - DB_PATH=${DB_PATH}
     ports:
       - "${TCP_PORT}:${TCP_PORT}"
 
@@ -26,8 +46,13 @@ services:
       context: ./cmd/udp-server
       dockerfile: Dockerfile
     container_name: mangahub-udp
+    depends_on:
+      - db-init
+    volumes:
+      - ./data:/data
     environment:
       - PORT=${UDP_PORT}
+      - DB_PATH=${DB_PATH}
     ports:
       - "${UDP_PORT}:${UDP_PORT}/udp"
 
@@ -36,7 +61,15 @@ services:
       context: ./cmd/grpc-server
       dockerfile: Dockerfile
     container_name: mangahub-grpc
+    depends_on:
+      - db-init
+    volumes:
+      - ./data:/data
     environment:
       - PORT=${GRPC_PORT}
+      - DB_PATH=${DB_PATH}
     ports:
       - "${GRPC_PORT}:${GRPC_PORT}"
+
+volumes:
+  data:
