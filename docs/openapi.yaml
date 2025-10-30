@@ -1,0 +1,496 @@
+openapi: 3.0.4
+
+info:
+  title: MangaHub API
+  version: 1.0
+
+servers:
+  - url: http://localhost:8080/{version}
+    description: Local server
+    variables:
+      version:
+        default: v1
+
+tags:
+  - name: Auth
+    description: Endpoints for user registration and authentication
+  - name: Manga
+    description: Search, browse, and retrieve manga details
+  - name: Library
+    description: Manage user manga collections and reading progress
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreationRequest"
+
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginResponse"
+
+        "400":
+          description: Invalid request payload or email already existed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginResponse"
+
+        "400":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh JWT access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token obtained from login
+
+      responses:
+        "200":
+          description: New JWT tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginResponse"
+
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /manga:
+    get:
+      tags:
+        - Manga
+      summary: Search manga with basic filters
+      parameters:
+        - in: query
+          name: title
+          schema:
+            type: string
+          description: Title or part of the title to search for
+        - in: query
+          name: author
+          schema:
+            type: string
+          description: Author name to filter by
+        - in: query
+          name: genre
+          schema:
+            type: string
+          description: Genre to filter by
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ongoing, completed, hiatus]
+          description: Status of the manga
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+          description: Number of results to return
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          description: Offset for pagination
+      
+      responses:
+        "200":
+          description: List of manga matching the search criteria
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedMangaList"
+
+  /manga/{mangaId}:
+    get:
+      tags:
+        - Manga
+      summary: Get manga details
+      parameters:
+        - in: path
+          name: mangaId
+          required: true
+          schema:
+            type: string
+            description: Unique identifier of the manga
+            example: one_piece
+      
+      responses:
+        "200":
+          description: Manga details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MangaDetail"
+
+  /users/library:
+    post:
+      tags:
+        - Library
+      summary: Add manga to user's library
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [manga_id]
+              properties:
+              manga_id:
+                type: string
+                example: one_piece
+      
+      responses:
+        "200":
+          description: Manga added to library
+
+        "400":
+          description: Invalid manga ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      tags:
+        - Library
+      summary: Get user's library
+      security:
+        - bearerAuth: []
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum: [reading, completed, plan_to_read]
+        description: Filter by reading status
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: Number of items per page
+      - in: query
+        name: offset
+        schema:
+          type: integer
+          default: 0
+        description: Offset for pagination
+
+      responses:
+        "200":
+          description: User's manga library
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/UserLibrary"
+                - $ref: "#/components/schemas/PaginatedUserLibrary"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/progress:
+    put:
+      tags:
+        - Library
+      summary: Update reading progress
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [manga_id, current_chapter]
+              properties:
+                manga_id:
+                  type: string
+                  example: one_piece
+                current_chapter:
+                  type: integer
+                  example: 1050
+
+      responses:
+        "200":
+          description: Progress updated
+
+        "400":
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserCreationRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: myemail@email.com
+        password:
+          type: string
+          format: password
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        name:
+          type: string
+          example: John Doe
+
+    UserLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: myemail@email.com
+        password:
+          type: string
+          format: password
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    UserLoginResponse:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          description: Token type, usually "Bearer"
+          example: Bearer
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds
+          example: 3600
+          minimum: 1
+        refresh_token:
+          type: string
+          description: Token to refresh access when expired
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    MangaDetail:
+      type: object
+      properties:
+        manga_id:
+          type: string
+          example: one_piece
+        title:
+          type: string
+          example: One Piece
+        author:
+          type: string
+          example: Eiichiro Oda
+        genres:
+          type: array
+          items:
+            type: string
+          example: ["Action", "Adventure", "Shounen"]
+        status:
+          type: string
+          example: ongoing
+        total_chapters:
+          type: integer
+          example: 1100
+        description:
+          type: string
+          example: A young pirate's adventure...
+        cover_url: 
+          type: string
+          example: https://example.com/covers/one-piece.jpg
+
+    MangaListItem:
+      type: object
+      properties:
+        manga_id:
+          type: string
+          example: one_piece
+        title:
+          type: string
+          example: One Piece
+        total_chapters:
+          type: integer
+          example: 1100
+        status:
+          type: string
+          example: ongoing
+
+    PaginatedMangaList:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of matching manga
+          example: 250
+        limit:
+          type: integer
+          description: Number of items per page
+          example: 20
+        offset:
+          type: integer
+          description: Offset used for pagination
+          example: 0
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/MangaListItem"   
+
+    PaginatedUserLibrary:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 120
+        limit:
+          type: integer
+          example: 20
+        offset:
+          type: integer
+          example: 0
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserLibraryItem"
+    
+    UserLibrary:
+      type: object
+      properties:
+        reading_lists:
+          type: object
+          properties:
+            reading:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserLibraryItem"
+            completed:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserLibraryItem"
+            plan_to_read:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserLibraryItem"
+
+    UserLibraryItem:
+      type: object
+      properties:
+        manga_id:
+          type: string
+          example: one_piece
+        current_chapter:
+          type: integer
+          example: 1050
+        status:
+          type: string
+          enum: [reading, completed, plan_to_read]
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+  
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: Error specific message
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: email
+              issue:
+                type: string
+                example: "Invalid email format"
