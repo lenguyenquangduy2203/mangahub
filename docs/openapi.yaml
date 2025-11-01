@@ -5,7 +5,7 @@ info:
   version: 1.0
 
 servers:
-  - url: http://localhost:8080/{version}
+  - url: http://localhost:8080/api/{version}
     description: Local server
     variables:
       version:
@@ -38,10 +38,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLoginResponse"
+                $ref: "#/components/schemas/TokenResponse"
 
         "400":
-          description: Invalid request payload or email already existed
+          description: Invalid request payload or username already existed
           content:
             application/json:
               schema:
@@ -65,42 +65,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLoginResponse"
+                $ref: "#/components/schemas/TokenResponse"
 
         "400":
           description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /auth/refresh:
-    post:
-      tags:
-        - Auth
-      summary: Refresh JWT access token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refresh_token]
-              properties:
-                refresh_token:
-                  type: string
-                  description: Refresh token obtained from login
-
-      responses:
-        "200":
-          description: New JWT tokens issued
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserLoginResponse"
-
-        "401":
-          description: Invalid or expired refresh token
           content:
             application/json:
               schema:
@@ -145,7 +113,7 @@ paths:
             type: integer
             default: 0
           description: Offset for pagination
-      
+
       responses:
         "200":
           description: List of manga matching the search criteria
@@ -167,7 +135,7 @@ paths:
             type: string
             description: Unique identifier of the manga
             example: one_piece
-      
+
       responses:
         "200":
           description: Manga details
@@ -194,7 +162,7 @@ paths:
               manga_id:
                 type: string
                 example: one_piece
-      
+
       responses:
         "200":
           description: Manga added to library
@@ -220,24 +188,24 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-      - in: query
-        name: status
-        schema:
-          type: string
-          enum: [reading, completed, plan_to_read]
-        description: Filter by reading status
-      - in: query
-        name: limit
-        schema:
-          type: integer
-          default: 20
-        description: Number of items per page
-      - in: query
-        name: offset
-        schema:
-          type: integer
-          default: 0
-        description: Offset for pagination
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [reading, completed, plan_to_read]
+          description: Filter by reading status
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          description: Offset for pagination
 
       responses:
         "200":
@@ -246,8 +214,8 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/UserLibrary"
-                - $ref: "#/components/schemas/PaginatedUserLibrary"
+                  - $ref: "#/components/schemas/UserLibrary"
+                  - $ref: "#/components/schemas/PaginatedUserLibrary"
 
         "401":
           description: Unauthorized
@@ -306,34 +274,31 @@ components:
   schemas:
     UserCreationRequest:
       type: object
-      required: [email, password, name]
+      required: [username, password]
       properties:
-        email:
+        username:
           type: string
-          format: email
-          example: myemail@email.com
+          example: MrJohnDoe
         password:
           type: string
           format: password
+          minLength: 8
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        name:
-          type: string
-          example: John Doe
 
     UserLoginRequest:
       type: object
-      required: [email, password]
+      required: [username, password]
       properties:
-        email:
+        username:
           type: string
-          format: email
-          example: myemail@email.com
+          example: MrJohnDoe
         password:
           type: string
           format: password
+          minLength: 8
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-    UserLoginResponse:
+    TokenResponse:
       type: object
       required: [access_token, token_type]
       properties:
@@ -350,10 +315,6 @@ components:
           description: Token lifetime in seconds
           example: 3600
           minimum: 1
-        refresh_token:
-          type: string
-          description: Token to refresh access when expired
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
     MangaDetail:
       type: object
@@ -381,7 +342,7 @@ components:
         description:
           type: string
           example: A young pirate's adventure...
-        cover_url: 
+        cover_url:
           type: string
           example: https://example.com/covers/one-piece.jpg
 
@@ -419,7 +380,7 @@ components:
         results:
           type: array
           items:
-            $ref: "#/components/schemas/MangaListItem"   
+            $ref: "#/components/schemas/MangaListItem"
 
     PaginatedUserLibrary:
       type: object
@@ -437,7 +398,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserLibraryItem"
-    
+
     UserLibrary:
       type: object
       properties:
@@ -473,7 +434,7 @@ components:
           type: string
           format: date-time
           example: "2025-01-01T12:00:00Z"
-  
+
     ErrorResponse:
       type: object
       properties:
@@ -482,7 +443,7 @@ components:
           example: INVALID_REQUEST
         message:
           type: string
-          example: Error specific message
+          example: Validation failed
         details:
           type: array
           items:
@@ -490,7 +451,7 @@ components:
             properties:
               field:
                 type: string
-                example: email
+                example: username
               issue:
                 type: string
-                example: "Invalid email format"
+                example: "Wrong username"
