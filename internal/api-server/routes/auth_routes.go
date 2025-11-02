@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// api/v1 endpoints
 func AuthRoutesV1(router *gin.RouterGroup, handler *handlers.AuthHandler) {
 	// Register
 	router.POST("/register", handler.RegisterV1)

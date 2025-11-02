@@ -8,6 +8,7 @@ import (
 	"mangahub/internal/api-server/handlers"
 	"mangahub/internal/api-server/routes"
 	"mangahub/internal/auth"
+	"mangahub/internal/manga"
 	"mangahub/internal/user"
 	"mangahub/pkg/utils/config"
 	"mangahub/pkg/utils/database"
@@ -32,9 +33,11 @@ func main() {
 	defer sqlConnection.Close()
 
 	// Dependency Injection and Wiring
-	// Repos & Utils
+	// Repos
 	userRepo := user.NewRepository(dbConnector)
+	mangaRepo := manga.NewRepository(dbConnector)
 
+	// Utils
 	jwtSecret := cfg.JWT_SECRET
 	jwtLifeTime := os.Getenv("JWT_ACCESS_TOKEN_LIFETIME")
 	jwtManager, err := auth.NewJWTManager(jwtSecret, jwtLifeTime)
@@ -45,9 +48,14 @@ func main() {
 
 	// Services
 	authService := auth.NewService(userRepo, jwtManager, passwordHasher)
+	mangaService := manga.NewService(mangaRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	mangaHandler := handlers.NewMangaHandler(mangaService)
+
+	// Middlewares
+	jwtMiddleware := auth.AuthMiddleware(jwtManager)
 
 	// Start server
 	router := gin.Default()
@@ -66,6 +74,14 @@ func main() {
 		// Auth routes
 		authGroupV1 := apiV1.Group("/auth")
 		routes.AuthRoutesV1(authGroupV1, authHandler)
+
+		// Manga routes
+		mangaV1 := apiV1.Group("/manga")
+		routes.MangaRoutesV1(mangaV1, mangaHandler)
+
+		// User private routes
+		userV1 := apiV1.Group("/users")
+		userV1.Use(jwtMiddleware)
 	}
 
 	// Read port from env

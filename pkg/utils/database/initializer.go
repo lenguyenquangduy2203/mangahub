@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 func NewDatabaseConnection(dbPath string) (DBConnector, error) {
@@ -17,7 +18,11 @@ func NewDatabaseConnection(dbPath string) (DBConnector, error) {
 		return nil, err
 	}
 
-	gormDB, err := gorm.Open(sqlite.Open(absPath), &gorm.Config{})
+	gormDB, err := gorm.Open(sqlite.Open(absPath), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
