@@ -20,6 +20,7 @@ type UserDataCreator interface {
 // Defines the contract for JWT operations
 type TokenManager interface {
 	GenerateJWT(userID string, userName string) (string, int64, error)
+	ValidateToken(tokenString string) (*JWTClaims, error)
 }
 
 // Defines the contract for password operations

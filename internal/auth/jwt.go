@@ -61,3 +61,22 @@ func (m *JWTManager) GenerateJWT(userID, userName string) (string, int64, error)
 
 	return signed, int64(m.Duration.Seconds()), nil
 }
+
+func (m *JWTManager) ValidateToken(tokenString string) (*JWTClaims, error) {
+	claims := &JWTClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(m.SecretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
+}
