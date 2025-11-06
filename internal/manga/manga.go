@@ -2,7 +2,7 @@ package manga
 
 import (
 	"context"
-	"mangahub/data/models"
+	"mangahub/pkg/models"
 	"mangahub/pkg/models/dtos"
 	"mangahub/pkg/utils/database"
 	gormHelper "mangahub/pkg/utils/gorm"

@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
-	"mangahub/data/models"
 	platform_errors "mangahub/pkg/errors"
+	"mangahub/pkg/models"
 	"mangahub/pkg/models/dtos"
 	gormHelper "mangahub/pkg/utils/gorm"
 

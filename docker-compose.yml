@@ -13,8 +13,8 @@ services:
     restart: "no"
   api-server:
     build:
-      context: ./cmd/api-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/api-server/Dockerfile
     container_name: mangahub-api
     depends_on:
       - db-init

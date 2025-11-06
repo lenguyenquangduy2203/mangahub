@@ -2,7 +2,7 @@ package database
 
 import (
 	"log"
-	"mangahub/data/models"
+	"mangahub/pkg/models"
 	"path/filepath"
 	"time"
 
