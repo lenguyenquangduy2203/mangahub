@@ -28,8 +28,8 @@ services:
 
   tcp-server:
     build:
-      context: ./cmd/tcp-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/tcp-server/Dockerfile
     container_name: mangahub-tcp
     depends_on:
       - db-init
