@@ -36,7 +36,7 @@ func NewService(uq UserLibraryQuery) *Service {
 func (s *Service) AddMangaToUserLibrary(ctx context.Context, userID string, mangaID string, currentChapter int) error {
 	err := s.UserLibraryQuery.AddMangaToLibrary(ctx, userID, mangaID, currentChapter)
 	if err != nil {
-		if errors.Is(err, manga.ErrMangaNotExistInDatabase) || errors.Is(err, ErrMangaAlreadyInUserLibrary) {
+		if errors.Is(err, manga.ErrMangaNotExistInDatabase) || errors.Is(err, ErrMangaAlreadyInUserLibrary) || errors.Is(err, manga.ErrInValidCurrentChapter) {
 			return err
 		}
 		return platform_errors.ErrDatabaseOperation
