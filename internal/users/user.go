@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"log"
 	"mangahub/internal/mangas"
 	"mangahub/pkg/models"
 	"mangahub/pkg/models/enums"
@@ -61,12 +62,6 @@ func (r *Repository) AddMangaToLibrary(ctx context.Context, userID string, manga
 		CurrentChapter: currentChapter,
 	}
 
-	if currentChapter > 0 {
-		userManga.Status = enums.READING_READING.StringUpper()
-	} else {
-		userManga.Status = enums.READING_PLAN_TO_READ.StringUpper()
-	}
-
 	err := gormHelper.Create(r.DB.DB(), ctx, &userManga)
 
 	if err != nil {
@@ -77,7 +72,7 @@ func (r *Repository) AddMangaToLibrary(ctx context.Context, userID string, manga
 			return ErrMangaAlreadyInUserLibrary
 		}
 	}
-
+	log.Println(err)
 	return err
 }
 

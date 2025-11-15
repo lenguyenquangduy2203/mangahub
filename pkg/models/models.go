@@ -1,16 +1,13 @@
 package models
 
 import (
-	"errors"
-	"time"
-
+	platform_errors "mangahub/pkg/errors"
 	"mangahub/pkg/models/enums"
 	gormHelper "mangahub/pkg/utils/gorm"
+	"time"
 
 	"gorm.io/gorm"
 )
-
-var ErrInValidCurrentChapter = errors.New("invalid current chapter")
 
 // Domain models
 type User struct {
@@ -43,6 +40,26 @@ type UserLibrary struct {
 	Manga Manga `gorm:"foreignKey:MangaID;references:ID"`
 }
 
+func (ul *UserLibrary) BeforeCreate(tx *gorm.DB) error {
+	manga, err := gormHelper.FindOne[Manga](tx, tx.Statement.Context, "id = ?", ul.MangaID)
+
+	if err != nil {
+		return err
+	}
+
+	if ul.CurrentChapter == manga.TotalChapters && manga.Status == enums.MANGA_COMPLETED.StringUpper() {
+		ul.Status = enums.READING_COMPLETED.StringUpper()
+	} else if ul.CurrentChapter < manga.TotalChapters {
+		ul.Status = enums.READING_READING.StringUpper()
+	} else if ul.CurrentChapter == 0 {
+		ul.Status = enums.READING_PLAN_TO_READ.StringUpper()
+	} else {
+		return platform_errors.ErrInValidCurrentChapter
+	}
+
+	return nil
+}
+
 func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
 	manga, err := gormHelper.FindOne[Manga](tx, tx.Statement.Context, "id = ?", ul.MangaID)
 
@@ -55,7 +72,7 @@ func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
 	} else if ul.CurrentChapter < manga.TotalChapters {
 		ul.Status = enums.READING_READING.StringUpper()
 	} else {
-		return ErrInValidCurrentChapter
+		return platform_errors.ErrInValidCurrentChapter
 	}
 
 	return nil

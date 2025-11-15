@@ -79,6 +79,15 @@ func (h *UserHandler) AddMangaV1(ctx *gin.Context) {
 			return
 		}
 
+		if errors.Is(err, mangas.ErrInValidCurrentChapter) {
+			errResp := dtos.ErrorResponse{
+				Code:    "INVALID_CURRENT_CHAPTER",
+				Message: "Current chapter is invalid",
+			}
+			ctx.JSON(http.StatusBadRequest, errResp)
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, dtos.ErrorResponse{
 			Code:    "INTERNAL_ERROR",
 			Message: "Add manga to user library failed due to internal error.",
