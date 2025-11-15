@@ -21,3 +21,16 @@ func IsUniqueConstraintError(err error) bool {
 	}
 	return false
 }
+
+func IsForeignKeyConstraintError(err error) bool {
+	var sqliteErr sqlite3.Error
+
+	// Use errors.As to unwrap the GORM error and check if it contains
+	if errors.As(err, &sqliteErr) {
+		// Check for the foreign key constraint error code (787)
+		if sqlite3.ErrNoExtended(sqliteErr.Code) == sqlite3.ErrConstraintForeignKey {
+			return true
+		}
+	}
+	return false
+}

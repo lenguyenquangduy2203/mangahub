@@ -23,3 +23,7 @@ func Find[T any](db *gorm.DB, ctx context.Context, arg any, values ...any) ([]T,
 	}
 	return gorm.G[T](db).Where(arg).Find(ctx)
 }
+
+func Update[T any](db *gorm.DB, ctx context.Context, data T, arg string, values ...any) (int, error) {
+	return gorm.G[T](db).Where(arg, values...).Updates(ctx, data)
+}

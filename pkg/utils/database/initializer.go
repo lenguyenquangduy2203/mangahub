@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"mangahub/pkg/models"
 	"path/filepath"
@@ -27,6 +28,16 @@ func NewDatabaseConnection(dbPath string) (DBConnector, error) {
 		return nil, err
 	}
 
+	// Enable FK
+	if err := gormDB.Exec("PRAGMA foreign_keys = ON;").Error; err != nil {
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
+	}
+
+	// Verify FK are enabled
+	var result int
+	gormDB.Raw("SELECT foreign_keys FROM pragma_foreign_keys();").Scan(&result)
+	log.Printf("Foreign keys status: %d (1=enabled, 0=disabled)", result)
+
 	if err := autoMigrate(gormDB); err != nil {
 		return nil, err
 	}
@@ -48,6 +59,6 @@ func autoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.Manga{},
-		&models.UserProgress{},
+		&models.UserLibrary{},
 	)
 }
