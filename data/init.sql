@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS manga (
     description TEXT
 );
 
-CREATE TABLE IF NOT EXISTS user_progress (
+CREATE TABLE IF NOT EXISTS user_library (
     user_id TEXT,
     manga_id TEXT,
     current_chapter INTEGER,

@@ -8,8 +8,8 @@ import (
 	"mangahub/internal/api-server/handlers"
 	"mangahub/internal/api-server/routes"
 	"mangahub/internal/auth"
-	"mangahub/internal/manga"
-	"mangahub/internal/user"
+	"mangahub/internal/mangas"
+	"mangahub/internal/users"
 	"mangahub/pkg/utils/config"
 	"mangahub/pkg/utils/database"
 
@@ -34,8 +34,8 @@ func main() {
 
 	// Dependency Injection and Wiring
 	// Repos
-	userRepo := user.NewRepository(dbConnector)
-	mangaRepo := manga.NewRepository(dbConnector)
+	userRepo := users.NewRepository(dbConnector)
+	mangaRepo := mangas.NewRepository(dbConnector)
 
 	// Utils
 	jwtSecret := cfg.JWT_SECRET
@@ -48,10 +48,12 @@ func main() {
 
 	// Services
 	authService := auth.NewService(userRepo, jwtManager, passwordHasher)
-	mangaService := manga.NewService(mangaRepo)
+	userService := users.NewService(userRepo)
+	mangaService := mangas.NewService(mangaRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userService)
 	mangaHandler := handlers.NewMangaHandler(mangaService)
 
 	// Middlewares
@@ -82,6 +84,7 @@ func main() {
 		// User private routes
 		userV1 := apiV1.Group("/users")
 		userV1.Use(jwtMiddleware)
+		routes.UserRoutesV1(userV1, userHandler)
 	}
 
 	// Read port from env

@@ -39,7 +39,7 @@ func (h *AuthHandler) RegisterV1(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(goCtx, 3*time.Second)
 	defer cancel()
 
-	tokenResp, err := h.AuthService.Register(c, body.Username, body.Password)
+	tokenInfo, err := h.AuthService.Register(c, body.Username, body.Password)
 
 	if err != nil {
 		log.Printf("ERROR: during registration for user %s: %v", body.Username, err)
@@ -65,8 +65,12 @@ func (h *AuthHandler) RegisterV1(ctx *gin.Context) {
 		return
 	}
 
-	// Success response
-	ctx.JSON(http.StatusOK, tokenResp)
+	resp := dtos.TokenResponse{
+		AccessToken: tokenInfo.AccessToken,
+		TokenType:   tokenInfo.TokenType,
+		ExpiresAt:   tokenInfo.ExpiresAt,
+	}
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (h *AuthHandler) LoginV1(ctx *gin.Context) {
@@ -87,7 +91,7 @@ func (h *AuthHandler) LoginV1(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(goCtx, 3*time.Second)
 	defer cancel()
 
-	tokenResp, err := h.AuthService.Login(c, body.Username, body.Password)
+	tokenInfo, err := h.AuthService.Login(c, body.Username, body.Password)
 
 	if err != nil {
 		log.Printf("ERROR: during login request for user %s: %v", body.Username, err)
@@ -107,6 +111,10 @@ func (h *AuthHandler) LoginV1(ctx *gin.Context) {
 		return
 	}
 
-	// Success response
-	ctx.JSON(http.StatusOK, tokenResp)
+	resp := dtos.TokenResponse{
+		AccessToken: tokenInfo.AccessToken,
+		TokenType:   tokenInfo.TokenType,
+		ExpiresAt:   tokenInfo.ExpiresAt,
+	}
+	ctx.JSON(http.StatusOK, resp)
 }

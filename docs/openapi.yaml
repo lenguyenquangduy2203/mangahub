@@ -155,7 +155,7 @@ paths:
     post:
       tags:
         - Library
-      summary: Add manga to user's library
+      summary: Add a new manga entry to the user's library.
       security:
         - bearerAuth: []
       requestBody:
@@ -169,6 +169,10 @@ paths:
               manga_id:
                 type: string
                 example: one_piece
+              current_chapter:
+                type: integer
+                description: Optional. If present (>0), status is 'reading'. If absent, status is 'plan_to_read'.
+                example: 1050
 
       responses:
         "200":
@@ -191,7 +195,7 @@ paths:
     get:
       tags:
         - Library
-      summary: Get user's library
+      summary: Get user's paginated library, optionally filtered by status
       security:
         - bearerAuth: []
       parameters:
@@ -200,7 +204,7 @@ paths:
           schema:
             type: string
             enum: [reading, completed, plan_to_read]
-          description: Filter by reading status
+          description: Filter by reading status (e.g., 'completed'). If omitted, returns a summary of all lists. Contains 5 most recently updated records for each lists.
         - in: query
           name: limit
           schema:
@@ -231,7 +235,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /user/progress:
     put:
       tags:
         - Library
@@ -251,6 +254,7 @@ paths:
                   example: one_piece
                 current_chapter:
                   type: integer
+                  description: The chapter the user just read. Status is determined by comparing this value to the manga's final chapter count.
                   example: 1050
 
       responses:
@@ -317,11 +321,10 @@ components:
           type: string
           description: Token type, usually "Bearer"
           example: Bearer
-        expires_in:
-          type: integer
+        expires_at:
+          type: string
           description: Token lifetime in seconds
-          example: 3600
-          minimum: 1
+          example: "2025-11-16T02:30:58.875441708+07:00"
 
     MangaDetail:
       type: object
@@ -440,7 +443,7 @@ components:
         last_updated:
           type: string
           format: date-time
-          example: "2025-01-01T12:00:00Z"
+          example: "2025-11-11 11:11:11"
 
     ErrorResponse:
       type: object

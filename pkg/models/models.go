@@ -1,12 +1,23 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
 
+	"mangahub/pkg/models/enums"
+	gormHelper "mangahub/pkg/utils/gorm"
+
+	"gorm.io/gorm"
+)
+
+var ErrInValidCurrentChapter = errors.New("invalid current chapter")
+
+// Domain models
 type User struct {
 	ID           string    `gorm:"primaryKey;type:TEXT"`
 	Username     string    `gorm:"unique;type:TEXT"`
 	PasswordHash string    `gorm:"column:password_hash;type:TEXT"`
-	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
 type Manga struct {
@@ -14,20 +25,81 @@ type Manga struct {
 	Title         string `gorm:"type:TEXT"`
 	Author        string `gorm:"type:TEXT"`
 	Genres        string `gorm:"type:TEXT"`
-	Status        string `gorm:"type:TEXT"` // ONGOING, HIATUS, COMPLETE
+	Status        string `gorm:"type:TEXT"` // ONGOING, HIATUS, COMPLETED
 	TotalChapters int    `gorm:"column:total_chapters"`
 	Description   string `gorm:"type:TEXT"`
 }
 
-type UserProgress struct {
+type UserLibrary struct {
 	// Composite Primary Key: (user_id, manga_id)
 	UserID         string    `gorm:"primaryKey;type:TEXT"`
 	MangaID        string    `gorm:"primaryKey;type:TEXT"`
-	CurrentChapter int       `gorm:"column:current_chapter"`
+	CurrentChapter int       `gorm:"column:current_chapter;default:0"`
 	Status         string    `gorm:"type:TEXT"` // READING, COMPLETED, PLAN_TO_READ
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;autoUpdateTime"`
 
 	// Adding the 'foreignKey' tag for clarity.
 	User  User  `gorm:"foreignKey:UserID;references:ID"`
 	Manga Manga `gorm:"foreignKey:MangaID;references:ID"`
+}
+
+func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
+	manga, err := gormHelper.FindOne[Manga](tx, tx.Statement.Context, "id = ?", ul.MangaID)
+
+	if err != nil {
+		return err
+	}
+
+	if ul.CurrentChapter == manga.TotalChapters && manga.Status == enums.MANGA_COMPLETED.StringUpper() {
+		ul.Status = enums.READING_COMPLETED.StringUpper()
+	} else if ul.CurrentChapter < manga.TotalChapters {
+		ul.Status = enums.READING_READING.StringUpper()
+	} else {
+		return ErrInValidCurrentChapter
+	}
+
+	return nil
+}
+
+type MangaSearchQuery struct {
+	Title  string
+	Author string
+	Genre  string
+	Status string
+	Limit  int
+	Offset int
+}
+
+type MangaListItem struct {
+	ID            string
+	Title         string
+	TotalChapters int
+	Status        string
+}
+
+type PaginatedMangaResult struct {
+	Total   int64
+	Limit   int
+	Offset  int
+	Results []MangaListItem
+}
+
+type ReadingList struct {
+	Reading    []LibraryItem
+	Completed  []LibraryItem
+	PlanToRead []LibraryItem
+}
+
+type LibraryItem struct {
+	MangaID        string
+	CurrentChapter int
+	Status         string
+	UpdatedAt      time.Time
+}
+
+type PaginatedUserLibrary struct {
+	Total   int64
+	Limit   int
+	Offset  int
+	Results []LibraryItem
 }
