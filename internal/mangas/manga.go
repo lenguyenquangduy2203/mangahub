@@ -3,7 +3,6 @@ package mangas
 import (
 	"context"
 	"mangahub/pkg/models"
-	"mangahub/pkg/models/dtos"
 	"mangahub/pkg/utils/database"
 	gormHelper "mangahub/pkg/utils/gorm"
 )
@@ -26,7 +25,7 @@ func (r *Repository) GetMangaById(ctx context.Context, mangaID string) (*models.
 	return &manga, err
 }
 
-func (r *Repository) FindMangaByQuery(ctx context.Context, query dtos.MangaSearchQuery) ([]models.Manga, int64, error) {
+func (r *Repository) FindMangaByQuery(ctx context.Context, query models.MangaSearchQuery) ([]models.Manga, int64, error) {
 	var mangas []models.Manga
 	var total int64
 

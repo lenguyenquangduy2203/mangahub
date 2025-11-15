@@ -12,6 +12,7 @@ import (
 
 var ErrInValidCurrentChapter = errors.New("invalid current chapter")
 
+// Domain models
 type User struct {
 	ID           string    `gorm:"primaryKey;type:TEXT"`
 	Username     string    `gorm:"unique;type:TEXT"`
@@ -58,4 +59,47 @@ func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
 	}
 
 	return nil
+}
+
+type MangaSearchQuery struct {
+	Title  string
+	Author string
+	Genre  string
+	Status string
+	Limit  int
+	Offset int
+}
+
+type MangaListItem struct {
+	ID            string
+	Title         string
+	TotalChapters int
+	Status        string
+}
+
+type PaginatedMangaResult struct {
+	Total   int64
+	Limit   int
+	Offset  int
+	Results []MangaListItem
+}
+
+type ReadingList struct {
+	Reading    []LibraryItem
+	Completed  []LibraryItem
+	PlanToRead []LibraryItem
+}
+
+type LibraryItem struct {
+	MangaID        string
+	CurrentChapter int
+	Status         string
+	UpdatedAt      time.Time
+}
+
+type PaginatedUserLibrary struct {
+	Total   int64
+	Limit   int
+	Offset  int
+	Results []LibraryItem
 }

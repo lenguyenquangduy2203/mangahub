@@ -6,12 +6,13 @@ import (
 	"log"
 	manga "mangahub/internal/mangas"
 	platform_errors "mangahub/pkg/errors"
+	"mangahub/pkg/models"
 )
 
 // Define contract for accessing user library and progress data
 type UserLibraryQuery interface {
 	AddMangaToLibrary(ctx context.Context, userID string, mangaID string, currentChapter int) error
-	GetLibrary(ctx context.Context, userID string, status string, limit int, offset int) (any, error)
+	GetLibrary(ctx context.Context, userID string, status string, limit int, offset int) (any, int64, error)
 	UpdateReadingProgress(ctx context.Context, userID string, mangaID string, currentChapter int) error
 }
 
@@ -61,5 +62,40 @@ func (s *Service) UpdateUserReadingProgress(ctx context.Context, userID string, 
 }
 
 func (s *Service) GetUserLibrary(ctx context.Context, userID string, status string, limit int, offset int) (any, error) {
-	return nil, nil
+	library, total, err := s.UserLibraryQuery.GetLibrary(ctx, userID, status, limit, offset)
+	if err != nil {
+		return nil, platform_errors.ErrDatabaseOperation
+	}
+
+	if lib, ok := library.([]models.UserLibrary); ok {
+		paginatedLibrary := models.PaginatedUserLibrary{
+			Total:   total,
+			Limit:   limit,
+			Offset:  offset,
+			Results: _convertToLibraryItems(lib),
+		}
+		return paginatedLibrary, nil
+	} else if lib, ok := library.(map[string][]models.UserLibrary); ok {
+		readingList := models.ReadingList{
+			Reading:    _convertToLibraryItems(lib["reading"]),
+			Completed:  _convertToLibraryItems(lib["completed"]),
+			PlanToRead: _convertToLibraryItems(lib["plan_to_read"]),
+		}
+		return readingList, nil
+	}
+
+	return nil, errors.New("unable to parse library data")
+}
+
+func _convertToLibraryItems(ul []models.UserLibrary) []models.LibraryItem {
+	items := make([]models.LibraryItem, 0, len(ul))
+	for _, item := range ul {
+		items = append(items, models.LibraryItem{
+			MangaID:        item.MangaID,
+			CurrentChapter: item.CurrentChapter,
+			Status:         item.Status,
+			UpdatedAt:      item.UpdatedAt,
+		})
+	}
+	return items
 }

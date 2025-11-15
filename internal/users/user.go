@@ -103,35 +103,69 @@ func (r *Repository) UpdateReadingProgress(ctx context.Context, userID string, m
 	return nil
 }
 
-func (r *Repository) GetLibrary(ctx context.Context, userID string, status string, limit int, offset int) (any, error) {
-	// 1. Start GORM query builder
-	db := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{})
+func (r *Repository) GetLibrary(ctx context.Context, userID string, status string, limit int, offset int) (any, int64, error) {
+	var total int64
 
-	// 2. Filter by UserID
-	db = db.Where("user_id = ?", userID)
+	tx := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{})
 
-	// 3. Optional: Filter by Status if provided
+	tx = tx.Where("user_id = ?", userID)
+
 	if status != "" {
-		// You may need to normalize the status string here (e.g., to UPPERCASE)
-		// based on how you store it in the database.
-		db = db.Where("status = ?", strings.ToUpper(status))
-	}
+		tx = tx.Where("status = ?", strings.ToUpper(status))
 
-	// 4. Apply Pagination
-	if limit > 0 {
-		db = db.Limit(limit)
-	}
-	if offset > 0 {
-		db = db.Offset(offset)
-	}
+		// Count total before pagination
+		if err := tx.Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
 
-	// 5. Execute the query
-	var libraryEntries []models.UserLibrary
-	// Use .Find() to retrieve multiple records
-	if err := db.Find(&libraryEntries).Error; err != nil {
-		return nil, err
-	}
+		if limit > 0 {
+			tx = tx.Limit(limit)
+		}
+		if offset > 0 {
+			tx = tx.Offset(offset)
+		}
 
-	// Since the interface returns 'any', return the list of library entries.
-	return libraryEntries, nil
+		var libraryEntries []models.UserLibrary
+		if err := tx.Order("manga_id ASC").Find(&libraryEntries).Error; err != nil {
+			return nil, 0, err
+		}
+
+		return libraryEntries, total, nil
+	} else {
+		var readingLibraryEntries []models.UserLibrary
+		var completedLibraryEntries []models.UserLibrary
+		var planToReadLibraryEntries []models.UserLibrary
+
+		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Where("user_id = ? AND status = ?", userID, enums.READING_READING.StringUpper()).
+			Order("manga_id ASC").
+			Limit(5).
+			Find(&readingLibraryEntries).Error; err != nil {
+			return nil, 0, err
+		}
+
+		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Where("user_id = ? AND status = ?", userID, enums.READING_COMPLETED.StringUpper()).
+			Order("manga_id ASC").
+			Limit(5).
+			Find(&completedLibraryEntries).Error; err != nil {
+			return nil, 0, err
+		}
+
+		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Where("user_id = ? AND status = ?", userID, enums.READING_PLAN_TO_READ.StringUpper()).
+			Order("manga_id ASC").
+			Limit(5).
+			Find(&planToReadLibraryEntries).Error; err != nil {
+			return nil, 0, err
+		}
+
+		readingList := map[string][]models.UserLibrary{
+			"reading":      readingLibraryEntries,
+			"completed":    completedLibraryEntries,
+			"plan_to_read": planToReadLibraryEntries,
+		}
+
+		return readingList, 0, nil
+	}
 }

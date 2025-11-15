@@ -321,11 +321,10 @@ components:
           type: string
           description: Token type, usually "Bearer"
           example: Bearer
-        expires_in:
-          type: integer
+        expires_at:
+          type: string
           description: Token lifetime in seconds
-          example: 3600
-          minimum: 1
+          example: "2025-11-16T02:30:58.875441708+07:00"
 
     MangaDetail:
       type: object

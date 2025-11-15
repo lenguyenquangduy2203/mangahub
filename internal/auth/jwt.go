@@ -41,12 +41,13 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (m *JWTManager) GenerateJWT(userID, userName string) (string, int64, error) {
+func (m *JWTManager) GenerateJWT(userID, userName string) (string, time.Time, error) {
+	expiresAt := time.Now().Add(m.Duration)
 	claims := JWTClaims{
 		UserID:   userID,
 		UserName: userName,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.Duration)),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "mangahub-api",
 			Subject:   userID,
@@ -56,10 +57,10 @@ func (m *JWTManager) GenerateJWT(userID, userName string) (string, int64, error)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(m.SecretKey))
 	if err != nil {
-		return "", 0, ErrTokenGeneration
+		return "", time.Time{}, ErrTokenGeneration
 	}
 
-	return signed, int64(m.Duration.Seconds()), nil
+	return signed, expiresAt, nil
 }
 
 func (m *JWTManager) ValidateToken(tokenString string) (*JWTClaims, error) {
