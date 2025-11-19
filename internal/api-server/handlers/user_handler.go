@@ -178,9 +178,7 @@ func (h *UserHandler) GetUserLibraryV1(ctx *gin.Context) {
 		return
 	}
 
-	query := dtos.UserMangaGetRequest{
-		Limit: pagination.DEFAULT_LIMIT,
-	}
+	query := dtos.UserMangaGetRequest{}
 
 	if err := ctx.ShouldBindQuery(&query); err != nil {
 		errResp := dtos.ErrorResponse{
@@ -193,15 +191,24 @@ func (h *UserHandler) GetUserLibraryV1(ctx *gin.Context) {
 		return
 	}
 
+	// Double check limit and page
+	if query.Limit <= 0 {
+		query.Limit = pagination.DEFAULT_LIMIT
+	}
 	if query.Limit > pagination.MAX_LIMIT {
 		query.Limit = pagination.MAX_LIMIT
 	}
+	if query.Page <= 0 {
+		query.Page = 1
+	}
+
+	offset := pagination.CalculateOffset(query.Page, query.Limit)
 
 	goCtx := ctx.Request.Context()
 	c, cancel := context.WithTimeout(goCtx, 3*time.Second)
 	defer cancel()
 
-	library, err := h.UserLibraryService.GetUserLibrary(c, userID, query.Status, query.Limit, query.Offset)
+	library, err := h.UserLibraryService.GetUserLibrary(c, userID, query.Status, query.Limit, offset)
 
 	resp := _mapLibraryToDTO(library)
 
@@ -233,6 +240,8 @@ func _mapLibraryItemsToDTO(items []models.LibraryItem) []dtos.UserLibraryItem {
 
 func _mapLibraryToDTO(library any) any {
 	if lib, ok := library.(models.PaginatedUserLibrary); ok {
+
+		// Map to internal paginated DTO
 		resp := dtos.PaginatedUserLibrary{
 			Total:   int(lib.Total),
 			Limit:   lib.Limit,
@@ -240,7 +249,8 @@ func _mapLibraryToDTO(library any) any {
 			Results: _mapLibraryItemsToDTO(lib.Results),
 		}
 
-		return resp
+		// Use generic function to build public paginated response
+		return dtos.BuildPaginatedResponse[dtos.UserLibraryItem](resp)
 	} else if lib, ok := library.(models.ReadingList); ok {
 		resp := dtos.UserLibrary{
 			ReadingList: dtos.ReadingList{
