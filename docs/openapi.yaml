@@ -106,13 +106,16 @@ paths:
           schema:
             type: integer
             default: 20
+            minimum: 1
+            maximum: 100
           description: Number of results to return
         - in: query
-          name: offset
+          name: page
           schema:
             type: integer
-            default: 0
-          description: Offset for pagination
+            default: 1
+            minimum: 1
+          description: Page number (1-based)
 
       responses:
         "200":
@@ -166,13 +169,13 @@ paths:
               type: object
               required: [manga_id]
               properties:
-              manga_id:
-                type: string
-                example: one_piece
-              current_chapter:
-                type: integer
-                description: Optional. If present (>0), status is 'reading'. If absent, status is 'plan_to_read'.
-                example: 1050
+                manga_id:
+                  type: string
+                  example: one_piece
+                current_chapter:
+                  type: integer
+                  description: Optional. If present (>0), status is 'reading'. If absent, status is 'plan_to_read'.
+                  example: 1050
 
       responses:
         "200":
@@ -204,19 +207,22 @@ paths:
           schema:
             type: string
             enum: [reading, completed, plan_to_read]
-          description: Filter by reading status (e.g., 'completed'). If omitted, returns a summary of all lists. Contains 5 most recently updated records for each lists.
+          description: Filter by reading status. If omitted, returns a summary of all lists.
         - in: query
           name: limit
           schema:
             type: integer
             default: 20
+            minimum: 1
+            maximum: 100
           description: Number of items per page
         - in: query
-          name: offset
+          name: page
           schema:
             type: integer
-            default: 0
-          description: Offset for pagination
+            default: 1
+            minimum: 1
+          description: Page number (1-based)
 
       responses:
         "200":
@@ -254,7 +260,7 @@ paths:
                   example: one_piece
                 current_chapter:
                   type: integer
-                  description: The chapter the user just read. Status is determined by comparing this value to the manga's final chapter count.
+                  description: The chapter the user just read.
                   example: 1050
 
       responses:
@@ -372,42 +378,47 @@ components:
           type: string
           example: ongoing
 
+    PaginationMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 250
+        total_pages:
+          type: integer
+          example: 13
+        has_next:
+          type: boolean
+          example: true
+        has_prev:
+          type: boolean
+          example: false
+
     PaginatedMangaList:
       type: object
       properties:
-        total:
-          type: integer
-          description: Total number of matching manga
-          example: 250
-        limit:
-          type: integer
-          description: Number of items per page
-          example: 20
-        offset:
-          type: integer
-          description: Offset used for pagination
-          example: 0
         results:
           type: array
           items:
             $ref: "#/components/schemas/MangaListItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMetadata"
 
     PaginatedUserLibrary:
       type: object
       properties:
-        total:
-          type: integer
-          example: 120
-        limit:
-          type: integer
-          example: 20
-        offset:
-          type: integer
-          example: 0
         results:
           type: array
           items:
             $ref: "#/components/schemas/UserLibraryItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationMetadata"
 
     UserLibrary:
       type: object

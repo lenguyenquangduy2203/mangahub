@@ -68,9 +68,7 @@ func (h *MangaHandler) GetMangaV1(ctx *gin.Context) {
 }
 
 func (h *MangaHandler) FindMangasV1(ctx *gin.Context) {
-	queryDto := dtos.MangaSearchQuery{
-		Limit: pagination.DEFAULT_LIMIT, // Default limit
-	}
+	queryDto := dtos.MangaSearchQuery{}
 
 	if err := ctx.ShouldBindQuery(&queryDto); err != nil {
 		errResp := dtos.ErrorResponse{
@@ -83,9 +81,18 @@ func (h *MangaHandler) FindMangasV1(ctx *gin.Context) {
 		return
 	}
 
+	// Double check limit and page
+	if queryDto.Limit <= 0 {
+		queryDto.Limit = pagination.DEFAULT_LIMIT
+	}
 	if queryDto.Limit > pagination.MAX_LIMIT {
 		queryDto.Limit = pagination.MAX_LIMIT
 	}
+	if queryDto.Page <= 0 {
+		queryDto.Page = 1
+	}
+
+	offset := pagination.CalculateOffset(queryDto.Page, queryDto.Limit)
 
 	log.Printf("DEBUG QUERY: %+v\n", queryDto)
 
@@ -99,11 +106,10 @@ func (h *MangaHandler) FindMangasV1(ctx *gin.Context) {
 		Genre:  queryDto.Genre,
 		Status: strings.ToUpper(queryDto.Status),
 		Limit:  queryDto.Limit,
-		Offset: queryDto.Offset,
+		Offset: offset,
 	}
 
 	result, err := h.MangaService.Find(c, query)
-	resp := _mapPaginatedMangaResultToDTO(result)
 
 	if err != nil {
 		log.Printf("ERROR: during request for finding mangas with query %v: %v", query, err)
@@ -114,6 +120,9 @@ func (h *MangaHandler) FindMangasV1(ctx *gin.Context) {
 		})
 		return
 	}
+
+	// Use generic function to build public paginated response
+	resp := dtos.BuildPaginatedResponse[dtos.MangaListItem](_mapPaginatedMangaResultToDTO(result))
 
 	ctx.JSON(http.StatusOK, resp)
 }
