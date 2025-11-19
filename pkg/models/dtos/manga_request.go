@@ -7,7 +7,7 @@ type MangaSearchQuery struct {
 	Genre  string `form:"genre"`
 	Status string `form:"status"` // enum: [ongoing, completed, hiatus]
 	Limit  int    `form:"limit"`
-	Offset int    `form:"offset"`
+	Page   int    `form:"page"`
 }
 
 type MangaIDQuery struct {
