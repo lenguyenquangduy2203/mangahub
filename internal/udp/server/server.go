@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 
@@ -24,6 +25,8 @@ func (s *NotificationServer) Listen() error {
 		return err
 	}
 	defer conn.Close()
+
+	fmt.Printf("UDP Notification Broadcast Server started on port %s\n", s.Port)
 
 	buf := make([]byte, 1024)
 	for {
