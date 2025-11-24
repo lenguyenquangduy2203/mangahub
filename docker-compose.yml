@@ -43,8 +43,8 @@ services:
 
   udp-server:
     build:
-      context: ./cmd/udp-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/udp-server/Dockerfile
     container_name: mangahub-udp
     depends_on:
       - db-init
@@ -54,7 +54,7 @@ services:
       - PORT=${UDP_PORT}
       - DB_PATH=${DB_PATH}
     ports:
-      - "${UDP_PORT}:${UDP_PORT}/udp"
+      - "${UDP_PORT}:${UDP_PORT}"
 
   grpc-server:
     build:

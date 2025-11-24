@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	srv := server.NewProgressSyncServer("9001")
+	srv := server.NewProgressSyncServer("9000")
 	if err := srv.Start(); err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Fatalf("TCP server error: %v", err)
 	}
 }
