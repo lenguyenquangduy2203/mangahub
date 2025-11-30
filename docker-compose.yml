@@ -58,8 +58,8 @@ services:
 
   grpc-server:
     build:
-      context: ./cmd/grpc-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/grpc-server/Dockerfile
     container_name: mangahub-grpc
     depends_on:
       - db-init
