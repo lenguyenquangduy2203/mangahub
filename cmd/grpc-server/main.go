@@ -45,9 +45,11 @@ func main() {
 	mangaRepo := mangas.NewRepository(dbConnector)
 
 	// Service
-	mangaService := grpcsrv.NewMangaServiceGrpcServer(*userRepo, *mangaRepo)
+	userService := users.NewService(userRepo)
+	mangaService := mangas.NewService(mangaRepo)
+	mangaGrpcService := grpcsrv.NewMangaServiceGrpcServer(*userService, *mangaService)
 
-	mangapb.RegisterMangaServiceServer(s, mangaService)
+	mangapb.RegisterMangaServiceServer(s, mangaGrpcService)
 
 	log.Println("gRPC server running at :50051")
 	if err := s.Serve(lis); err != nil {
