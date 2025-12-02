@@ -9,20 +9,25 @@ import (
 	mangapb "mangahub/proto/manga"
 	"strings"
 
+	"mangahub/internal/tcp/client"
+	update "mangahub/internal/tcp/models"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type MangaServiceServer struct {
 	mangapb.UnimplementedMangaServiceServer
-	userService  users.Service
-	mangaService mangas.Service
+	userService           users.Service
+	mangaService          mangas.Service
+	tcpProgressSyncClient *client.ProgressSyncClient
 }
 
-func NewMangaServiceGrpcServer(userService users.Service, mangaService mangas.Service) *MangaServiceServer {
+func NewMangaServiceGrpcServer(userService users.Service, mangaService mangas.Service, tcpClient *client.ProgressSyncClient) *MangaServiceServer {
 	return &MangaServiceServer{
-		userService:  userService,
-		mangaService: mangaService,
+		userService:           userService,
+		mangaService:          mangaService,
+		tcpProgressSyncClient: tcpClient,
 	}
 }
 
@@ -93,6 +98,12 @@ func (s *MangaServiceServer) UpdateProgress(ctx context.Context, req *mangapb.Pr
 		}
 		return nil, status.Errorf(codes.Internal, "update progress failed: %v", err)
 	}
+
+	s.tcpProgressSyncClient.Send(update.ProgressUpdate{
+		UserID:  req.GetUserId(),
+		MangaID: req.GetMangaId(),
+		Chapter: int(req.GetChapter()),
+	})
 
 	return &mangapb.ProgressResponse{
 		Ok: true,

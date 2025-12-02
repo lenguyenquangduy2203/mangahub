@@ -63,6 +63,7 @@ services:
     container_name: mangahub-grpc
     depends_on:
       - db-init
+      - tcp-server
     volumes:
       - ./data:/data
     environment:

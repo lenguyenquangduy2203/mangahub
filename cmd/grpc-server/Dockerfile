@@ -20,6 +20,7 @@ COPY proto/manga/ ./proto/manga/
 COPY internal/grpc/ ./internal/grpc/
 COPY internal/mangas/ ./internal/mangas/
 COPY internal/users/ ./internal/users/
+COPY internal/tcp/ ./internal/tcp/
 
 # Copy pkg packages
 COPY pkg/errors/ ./pkg/errors/
