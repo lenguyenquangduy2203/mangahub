@@ -18,12 +18,12 @@ import (
 
 type MangaServiceServer struct {
 	mangapb.UnimplementedMangaServiceServer
-	userService           users.UserLibraryService
-	mangaService          mangas.MangaService
-	tcpProgressSyncClient client.ProgressSync
+	userService           users.Service
+	mangaService          mangas.Service
+	tcpProgressSyncClient *client.ProgressSyncClient
 }
 
-func NewMangaServiceGrpcServer(userService users.UserLibraryService, mangaService mangas.MangaService, tcpClient client.ProgressSync) *MangaServiceServer {
+func NewMangaServiceGrpcServer(userService users.Service, mangaService mangas.Service, tcpClient *client.ProgressSyncClient) *MangaServiceServer {
 	return &MangaServiceServer{
 		userService:           userService,
 		mangaService:          mangaService,

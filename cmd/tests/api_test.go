@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"mangahub/internal/api-server/handlers"
+	"mangahub/internal/api-server/mangas"
 	"mangahub/internal/api-server/routes"
+	"mangahub/internal/api-server/users"
 	"mangahub/internal/auth"
-	"mangahub/internal/mangas"
-	"mangahub/internal/users"
 	"mangahub/pkg/utils/database"
 
 	"mangahub/pkg/models"
