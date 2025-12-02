@@ -34,7 +34,7 @@ func NewMangaServiceGrpcServer(userService users.UserLibraryService, mangaServic
 func (s *MangaServiceServer) GetManga(ctx context.Context, req *mangapb.GetMangaRequest) (*mangapb.MangaResponse, error) {
 	manga, err := s.mangaService.Get(ctx, req.GetId())
 	if err != nil {
-		if errors.Is(err, mangas2.ErrMangaNotExistInDatabase) {
+		if errors.Is(err, mangas.ErrMangaNotExistInDatabase) {
 			return nil, status.Errorf(codes.NotFound, "manga not found: %s", req.GetId())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get manga: %v", err)
@@ -87,13 +87,13 @@ func (s *MangaServiceServer) SearchManga(ctx context.Context, req *mangapb.Searc
 func (s *MangaServiceServer) UpdateProgress(ctx context.Context, req *mangapb.ProgressRequest) (*mangapb.ProgressResponse, error) {
 	err := s.userService.UpdateUserReadingProgress(ctx, req.GetUserId(), req.GetMangaId(), int(req.GetChapter()))
 	if err != nil {
-		if errors.Is(err, mangas2.ErrMangaNotExistInDatabase) {
+		if errors.Is(err, mangas.ErrMangaNotExistInDatabase) {
 			return nil, status.Error(codes.NotFound, "manga not found in database")
 		}
-		if errors.Is(err, users2.ErrMangaNotExistInUserLibrary) {
+		if errors.Is(err, users.ErrMangaNotExistInUserLibrary) {
 			return nil, status.Error(codes.NotFound, "manga not found in user library")
 		}
-		if errors.Is(err, mangas2.ErrInValidCurrentChapter) {
+		if errors.Is(err, mangas.ErrInValidCurrentChapter) {
 			return nil, status.Error(codes.InvalidArgument, "invalid chapter number")
 		}
 		return nil, status.Errorf(codes.Internal, "update progress failed: %v", err)
