@@ -6,6 +6,10 @@ import (
 	"net"
 )
 
+type ProgressSync interface {
+	Send(models.ProgressUpdate)
+}
+
 type ProgressSyncClient struct {
 	conn net.Conn
 	addr string
