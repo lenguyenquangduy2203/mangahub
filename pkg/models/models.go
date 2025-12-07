@@ -18,13 +18,14 @@ type User struct {
 }
 
 type Manga struct {
-	ID            string `gorm:"primaryKey;type:TEXT"`
-	Title         string `gorm:"type:TEXT"`
-	Author        string `gorm:"type:TEXT"`
-	Genres        string `gorm:"type:TEXT"`
-	Status        string `gorm:"type:TEXT"` // ONGOING, HIATUS, COMPLETED
-	TotalChapters int    `gorm:"column:total_chapters"`
-	Description   string `gorm:"type:TEXT"`
+	ID             string `gorm:"primaryKey;type:TEXT"`
+	Title          string `gorm:"type:TEXT"`
+	Author         string `gorm:"type:TEXT"`
+	Genres         string `gorm:"type:TEXT"`
+	Status         string `gorm:"type:TEXT"` // ONGOING, HIATUS, COMPLETED
+	TotalChapters  int    `gorm:"column:total_chapters"`
+	Description    string `gorm:"type:TEXT"`
+	MangaUpdatesID *int   `gorm:"column:mangaupdates_id;uniqueIndex;type:INTEGER;default:null"`
 }
 
 type UserLibrary struct {

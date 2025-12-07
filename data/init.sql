@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS manga (
     genres TEXT, -- JSON array as text
     status TEXT,
     total_chapters INTEGER,
-    description TEXT
+    description TEXT,
+    mangaupdates_id INTEGER UNIQUE NULLABLE,
 );
 
 CREATE TABLE IF NOT EXISTS user_library (
