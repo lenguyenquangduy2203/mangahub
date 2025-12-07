@@ -1,5 +1,5 @@
 import requests
-from config import settings
+from config.settings import ANILIST_BASE_URL, TIME_OUT
 from typing import Any, Dict, List, Tuple
 from utils import utils
 
@@ -17,6 +17,9 @@ class AniListClient:
                 title {
                     romaji
                     english
+                }
+                startDate {
+                    year
                 }
                 description(asHtml: $asHtml)
                 genres
@@ -42,9 +45,9 @@ class AniListClient:
 
     def _fetch (self, query: str, variables: Dict[str, Any]) -> Dict[str, Any]:
         response = self.session.post(
-            settings.ANILIST_BASE_URL,
+            ANILIST_BASE_URL,
             json={"query": query, "variables": variables},
-            timeout=10
+            timeout=TIME_OUT
         )
 
         response.raise_for_status()
@@ -80,10 +83,14 @@ class AniListClient:
                 match item["status"]:
                     case "RELEASING":
                         item["status"] = "ONGOING"
-                        all_not_completed_manga_title.append(item["title"])
+                        all_not_completed_manga_title.append({
+                            "title": item["title"]["romaji"], 
+                            "year": item["startDate"]["year"]})
 
                     case "HIATUS":
-                        all_not_completed_manga_title.append(item["title"])
+                        all_not_completed_manga_title.append({
+                            "title": item["title"]["romaji"], 
+                            "year": item["startDate"]["year"]})
                         pass
                     
                     case "FINISHED":
