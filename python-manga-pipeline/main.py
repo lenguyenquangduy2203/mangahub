@@ -21,13 +21,14 @@ def _parse_cli_args() -> argparse.Namespace:
 
 def main():
     arg = _parse_cli_args()
+    runner = PipelineRunner()
 
     if arg.init:
         logger.info("Starting Top 100 Manga Initialization Pipeline...")
-        runner = PipelineRunner()
         runner.run_top_100_init_pipline()
     else:
-        logger.info("Script finished.")
+        logger.info("Staring Update Lastest Chapter Pipeline...")
+        runner.run_update_non_complete_pipeline()
 
 if __name__ == "__main__":
     main()
