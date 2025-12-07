@@ -5,6 +5,7 @@ import (
 	"mangahub/pkg/models"
 	"mangahub/pkg/utils/database"
 	gormHelper "mangahub/pkg/utils/gorm"
+	"strings"
 )
 
 type Repository struct {
@@ -38,7 +39,12 @@ func (r *Repository) FindMangaByQuery(ctx context.Context, query models.MangaSea
 		tx = tx.Where("author LIKE ?", "%"+query.Author+"%")
 	}
 	if query.Genre != "" {
-		tx = tx.Where("genres LIKE ?", "%"+query.Genre+"%")
+		// tx = tx.Where("genres LIKE ?", "%"+query.Genre+"%")
+		genres := strings.SplitSeq(query.Genre, ",")
+		for g := range genres {
+			g = strings.TrimSpace(g)
+			tx = tx.Where("genres LIKE ?", "%"+g+"%")
+		}
 	}
 	if query.Status != "" {
 		tx = tx.Where("status = ?", query.Status)

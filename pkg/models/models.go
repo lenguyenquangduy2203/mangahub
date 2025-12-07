@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	platform_errors "mangahub/pkg/errors"
 	"mangahub/pkg/models/enums"
 	gormHelper "mangahub/pkg/utils/gorm"
@@ -45,12 +46,16 @@ func (ul *UserLibrary) BeforeCreate(tx *gorm.DB) error {
 	manga, err := gormHelper.FindOne[Manga](tx, tx.Statement.Context, "id = ?", ul.MangaID)
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return platform_errors.ErrMangaNotExistInDatabase
+		}
+
 		return err
 	}
 
 	if ul.CurrentChapter == manga.TotalChapters && manga.Status == enums.MANGA_COMPLETED.StringUpper() {
 		ul.Status = enums.READING_COMPLETED.StringUpper()
-	} else if ul.CurrentChapter < manga.TotalChapters {
+	} else if ul.CurrentChapter < manga.TotalChapters && ul.CurrentChapter > 0 {
 		ul.Status = enums.READING_READING.StringUpper()
 	} else if ul.CurrentChapter == 0 {
 		ul.Status = enums.READING_PLAN_TO_READ.StringUpper()
@@ -65,12 +70,16 @@ func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
 	manga, err := gormHelper.FindOne[Manga](tx, tx.Statement.Context, "id = ?", ul.MangaID)
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return platform_errors.ErrMangaNotExistInDatabase
+		}
+
 		return err
 	}
 
 	if ul.CurrentChapter == manga.TotalChapters && manga.Status == enums.MANGA_COMPLETED.StringUpper() {
 		ul.Status = enums.READING_COMPLETED.StringUpper()
-	} else if ul.CurrentChapter < manga.TotalChapters {
+	} else if ul.CurrentChapter < manga.TotalChapters && ul.CurrentChapter > 0 {
 		ul.Status = enums.READING_READING.StringUpper()
 	} else {
 		return platform_errors.ErrInValidCurrentChapter
