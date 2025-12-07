@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass
 class Manga:
@@ -8,5 +9,5 @@ class Manga:
     genres: list
     status: str
     total_chapters: int
-    desciption: str
-    mangaupdates_id: int
+    description: str
+    mangaupdates_id: Optional[int]

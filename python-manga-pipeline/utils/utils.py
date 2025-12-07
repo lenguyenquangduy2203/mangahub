@@ -6,6 +6,21 @@ from typing import Any, Dict, List
 def generate_custom_id(title_romaji: str) -> str | None:
     if not title_romaji:
         return None
+    
+    replacements = {
+        '×': 'x',
+        '&': 'and',
+        '+': 'plus',
+        ':': '-',
+        "'": '',
+        '"': '',
+        '!': '',
+        '?': '',
+        '.': '',
+        '…': '',
+    }
+    for char, replacement in replacements.items():
+        title_romaji = title_romaji.replace(char, replacement)
         
     title_slug = title_romaji.lower()
 
@@ -42,10 +57,10 @@ def map_to_manga_model(item: Dict[str, Any]) -> Manga:
     title_obj: Dict[str, str] = item.get("title")
     
     m_id = generate_custom_id(title_obj.get("romaji"))
-    title = title_obj.get("english")
+    title = title_obj.get("english") or title_obj.get("romaji")
 
     author = _get_author_from_staffs(item.get("staff"))
-    genres = item.get("genres") or []
+    genres = ", ".join(item.get("genres") or [])
     status = item.get("status")
     total_chapters: int = item.get("chapters")
     description = item.get("description")
@@ -59,7 +74,7 @@ def map_to_manga_model(item: Dict[str, Any]) -> Manga:
         genres=genres,
         status=status,
         total_chapters=total_chapters,
-        desciption=description,
+        description=description,
         mangaupdates_id=mangaupdates_id
     )
     
