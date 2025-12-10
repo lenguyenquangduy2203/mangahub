@@ -23,7 +23,7 @@ class AniListClient:
                 }
                 description(asHtml: $asHtml)
                 genres
-                status
+                status(version: 2)
                 chapters
                 staff(sort: $staffSort perPage: $staffPerPage) {
                     edges {
