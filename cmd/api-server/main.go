@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"mangahub/internal/api-server/handlers"
 	"mangahub/internal/api-server/routes"
@@ -24,7 +23,7 @@ func main() {
 	}
 
 	// Initialize Database Connection
-	dbConnector, err := database.NewDatabaseConnection(cfg.DB_PATH)
+	dbConnector, err := database.NewDatabaseConnection(cfg.API_CONFIG.DB_PATH)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -38,8 +37,8 @@ func main() {
 	mangaRepo := mangas.NewRepository(dbConnector)
 
 	// Utils
-	jwtSecret := cfg.JWT_SECRET
-	jwtLifeTime := os.Getenv("JWT_ACCESS_TOKEN_LIFETIME")
+	jwtSecret := cfg.API_CONFIG.JWT_SECRET
+	jwtLifeTime := cfg.API_CONFIG.JWT_ACCESS_TOKEN_LIFETIME
 	jwtManager, err := auth.NewJWTManager(jwtSecret, jwtLifeTime)
 	if err != nil {
 		log.Fatalf("Failed to initialize JWT Manager: %v", err)
@@ -88,7 +87,7 @@ func main() {
 	}
 
 	// Read port from env
-	port := cfg.API_PORT
+	port := cfg.API_CONFIG.API_PORT
 
 	router.Run(":" + port)
 }

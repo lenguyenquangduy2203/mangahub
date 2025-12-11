@@ -13,5 +13,5 @@ type UserMangaUpdateRequest struct {
 type UserMangaGetRequest struct {
 	Status string `form:"status"` // enum: [reading, completed, plan_to_read]
 	Limit  int    `form:"limit"`
-	Offset int    `form:"offset"`
+	Page   int    `form:"page"`
 }
