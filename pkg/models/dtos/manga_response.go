@@ -8,7 +8,6 @@ type MangaDetail struct {
 	Status        string   `json:"status"` // enum: [ongoing, completed, hiatus]
 	TotalChapters int      `json:"total_chapters"`
 	Description   string   `json:"description"`
-	CoverURL      string   `json:"cover_url"`
 }
 
 type MangaListItem struct {

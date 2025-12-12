@@ -1,7 +1,7 @@
 package pagination
 
 const (
-	DEFAULT_LIMIT = 20
+	DEFAULT_LIMIT = 50
 	MAX_LIMIT     = 100
 )
 

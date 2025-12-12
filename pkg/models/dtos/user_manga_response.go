@@ -2,6 +2,10 @@ package dtos
 
 import "time"
 
+type UserAddOrUpdateLibrary struct {
+	Message string `json:"message"`
+}
+
 type UserLibrary struct {
 	ReadingList ReadingList `json:"reading_lists"`
 }
@@ -14,6 +18,7 @@ type ReadingList struct {
 
 type UserLibraryItem struct {
 	MangaID        string    `json:"manga_id"`
+	Title          string    `json:"title"`
 	CurrentChapter int       `json:"current_chapter"`
 	Status         string    `json:"status"`
 	LastUpdated    time.Time `json:"last_updated"`

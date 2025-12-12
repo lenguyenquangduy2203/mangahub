@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"mangahub/internal/mangas"
+	mangas2 "mangahub/internal/api-server/mangas"
 	"mangahub/pkg/models"
 	"mangahub/pkg/models/dtos"
 	"mangahub/pkg/pagination"
@@ -17,10 +17,10 @@ import (
 )
 
 type MangaHandler struct {
-	MangaService mangas.MangaService
+	MangaService mangas2.MangaService
 }
 
-func NewMangaHandler(ms mangas.MangaService) *MangaHandler {
+func NewMangaHandler(ms mangas2.MangaService) *MangaHandler {
 	return &MangaHandler{MangaService: ms}
 }
 
@@ -48,7 +48,7 @@ func (h *MangaHandler) GetMangaV1(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: during request for manga %s: %v", id.ID, err)
 
-		if errors.Is(err, mangas.ErrInvalidMangaID) {
+		if errors.Is(err, mangas2.ErrInvalidMangaID) {
 			ctx.JSON(http.StatusNotFound, dtos.ErrorResponse{
 				Code:    "NOT_FOUND",
 				Message: "Not found manga with id: " + id.ID,
