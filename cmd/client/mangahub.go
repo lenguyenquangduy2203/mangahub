@@ -192,7 +192,7 @@ func getAuth(username, password *string) string {
 		log.Fatal("Error: -user and -pass are required")
 	}
 
-	fmt.Println("\uF09C Authenticating...")
+	fmt.Println("🔐 Authenticating...")
 	token, err := client.Login(*username, *password)
 	if err != nil {
 		log.Fatalf("Login failed: %v", err)

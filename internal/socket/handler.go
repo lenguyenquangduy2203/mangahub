@@ -43,7 +43,7 @@ func HandleWebSocket(hub *Hub, cfg config.SocketConfig) gin.HandlerFunc {
 				return
 			}
 		} else {
-			log.Printf("Room %s does not exist. Rejecting client %s", roomName, userId)
+			log.Printf("❌ Room %s does not exist. Rejecting client %s", roomName, userId)
 			c.JSON(400, gin.H{"error": fmt.Sprintf("Room '%s' does not exist, default rooms: [%s]", roomName, strings.Join(cfg.CHAT_ROOMS, ", "))})
 			return
 		}
