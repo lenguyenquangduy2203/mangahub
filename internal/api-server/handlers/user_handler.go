@@ -3,10 +3,11 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"mangahub/internal/api-server/mangas"
+	users2 "mangahub/internal/api-server/users"
 	"mangahub/internal/auth"
-	"mangahub/internal/mangas"
-	"mangahub/internal/users"
 	"mangahub/pkg/models"
 	"mangahub/pkg/models/dtos"
 	"mangahub/pkg/pagination"
@@ -18,10 +19,10 @@ import (
 )
 
 type UserHandler struct {
-	UserLibraryService users.UserLibraryService
+	UserLibraryService users2.UserLibraryService
 }
 
-func NewUserHandler(ls users.UserLibraryService) *UserHandler {
+func NewUserHandler(ls users2.UserLibraryService) *UserHandler {
 	return &UserHandler{UserLibraryService: ls}
 }
 
@@ -59,7 +60,7 @@ func (h *UserHandler) AddMangaV1(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: during request for adding manga to library for %v: %v", userID, err)
 
-		if errors.Is(err, users.ErrMangaAlreadyInUserLibrary) {
+		if errors.Is(err, users2.ErrMangaAlreadyInUserLibrary) {
 			errResp := dtos.ErrorResponse{
 				Code:    "MANGA_ALREADY_IN_LIBRARY",
 				Message: "Manga is already in user library",
@@ -95,7 +96,9 @@ func (h *UserHandler) AddMangaV1(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	ctx.JSON(http.StatusOK, dtos.UserAddOrUpdateLibrary{
+		Message: fmt.Sprintf("Added manga (%s) to user library successfully.", body.MangaID),
+	})
 }
 
 func (h *UserHandler) UpdateReadingProgressV1(ctx *gin.Context) {
@@ -129,7 +132,7 @@ func (h *UserHandler) UpdateReadingProgressV1(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: during request for updating reading progress for %v: %v", userID, err)
 
-		if errors.Is(err, users.ErrMangaNotExistInUserLibrary) {
+		if errors.Is(err, users2.ErrMangaNotExistInUserLibrary) {
 			errResp := dtos.ErrorResponse{
 				Code:    "MANGA_NOT_IN_LIBRARY",
 				Message: "Manga does not exist in user library",
@@ -163,7 +166,9 @@ func (h *UserHandler) UpdateReadingProgressV1(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	ctx.JSON(http.StatusOK, dtos.UserAddOrUpdateLibrary{
+		Message: fmt.Sprintf("Updated manga (%s) in user library successfully.", body.MangaID),
+	})
 }
 
 func (h *UserHandler) GetUserLibraryV1(ctx *gin.Context) {
@@ -230,6 +235,7 @@ func _mapLibraryItemsToDTO(items []models.LibraryItem) []dtos.UserLibraryItem {
 	for _, item := range items {
 		result = append(result, dtos.UserLibraryItem{
 			MangaID:        item.MangaID,
+			Title:          item.Title,
 			CurrentChapter: item.CurrentChapter,
 			Status:         item.Status,
 			LastUpdated:    item.UpdatedAt,

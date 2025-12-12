@@ -1,14 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"log"
+	"mangahub/internal/socket"
 	"net/http"
 
 	"mangahub/internal/api-server/handlers"
+	"mangahub/internal/api-server/mangas"
 	"mangahub/internal/api-server/routes"
+	"mangahub/internal/api-server/users"
 	"mangahub/internal/auth"
-	"mangahub/internal/mangas"
-	"mangahub/internal/users"
 	"mangahub/pkg/utils/config"
 	"mangahub/pkg/utils/database"
 
@@ -29,7 +31,12 @@ func main() {
 	}
 	// Defer the close on the underlying SQL connection
 	sqlConnection := dbConnector.(*database.Database).SQLDB()
-	defer sqlConnection.Close()
+	defer func(sqlConnection *sql.DB) {
+		err := sqlConnection.Close()
+		if err != nil {
+			log.Fatalf("Failed to close database connection: %v", err)
+		}
+	}(sqlConnection)
 
 	// Dependency Injection and Wiring
 	// Repos
@@ -58,8 +65,12 @@ func main() {
 	// Middlewares
 	jwtMiddleware := auth.AuthMiddleware(jwtManager)
 
+	// Register socket hub
+	hub := socket.NewHub(cfg.SOCKET_CONFIG)
+
 	// Start server
 	router := gin.Default()
+	go hub.Run()
 
 	// version 1
 	apiV1 := router.Group("/api/v1")
@@ -84,10 +95,16 @@ func main() {
 		userV1 := apiV1.Group("/users")
 		userV1.Use(jwtMiddleware)
 		routes.UserRoutesV1(userV1, userHandler)
+
+		// Socket endpoint (private)
+		apiV1.GET("/ws", jwtMiddleware, socket.HandleWebSocket(hub, cfg.SOCKET_CONFIG))
 	}
 
 	// Read port from env
 	port := cfg.API_CONFIG.API_PORT
 
-	router.Run(":" + port)
+	err = router.Run(":" + port)
+	if err != nil {
+		log.Fatalf("Failed to start API server: %v", err)
+	}
 }

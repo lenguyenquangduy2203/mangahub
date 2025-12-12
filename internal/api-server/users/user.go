@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"mangahub/internal/mangas"
+	"mangahub/internal/api-server/mangas"
 	"mangahub/pkg/models"
 	"mangahub/pkg/models/enums"
 	"mangahub/pkg/utils/database"
@@ -121,7 +121,7 @@ func (r *Repository) GetLibrary(ctx context.Context, userID string, status strin
 		}
 
 		var libraryEntries []models.UserLibrary
-		if err := tx.Order("manga_id ASC").Find(&libraryEntries).Error; err != nil {
+		if err := tx.Preload("Manga").Order("manga_id ASC").Find(&libraryEntries).Error; err != nil {
 			return nil, 0, err
 		}
 
@@ -132,6 +132,7 @@ func (r *Repository) GetLibrary(ctx context.Context, userID string, status strin
 		var planToReadLibraryEntries []models.UserLibrary
 
 		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Preload("Manga").
 			Where("user_id = ? AND status = ?", userID, enums.READING_READING.StringUpper()).
 			Order("manga_id ASC").
 			Limit(5).
@@ -140,6 +141,7 @@ func (r *Repository) GetLibrary(ctx context.Context, userID string, status strin
 		}
 
 		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Preload("Manga").
 			Where("user_id = ? AND status = ?", userID, enums.READING_COMPLETED.StringUpper()).
 			Order("manga_id ASC").
 			Limit(5).
@@ -148,6 +150,7 @@ func (r *Repository) GetLibrary(ctx context.Context, userID string, status strin
 		}
 
 		if err := r.DB.DB().WithContext(ctx).Model(&models.UserLibrary{}).
+			Preload("Manga").
 			Where("user_id = ? AND status = ?", userID, enums.READING_PLAN_TO_READ.StringUpper()).
 			Order("manga_id ASC").
 			Limit(5).

@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 	"os"
-	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -21,22 +21,7 @@ type APIConfig struct {
 }
 
 type SocketConfig struct {
-	// MaxConnections    int
-	// ReadBufferSize    int
-	// WriteBufferSize   int
-	// HandshakeTimeout  time.Duration
-	// PongWait          time.Duration
-	// PingPeriod        time.Duration
-	// WriteWait         time.Duration
-	// MaxMessageSize    int64
-	// EnableCompression bool
-	MAX_CONNECTIONS   int
-	READ_BUFFER_SIZE  int // As byte
-	WRITE_BUFFER_SIZE int // As byte
-	PONG_WAIT         int // As second
-	PING_PERIOD       int // AS second
-	WRITE_WAIT        int // As second
-	MAX_MESSAGE       int
+	CHAT_ROOMS []string
 }
 
 // LoadConfig initializes the Config struct.
@@ -54,13 +39,7 @@ func LoadConfig() (*Config, error) {
 		},
 
 		SOCKET_CONFIG: SocketConfig{
-			MAX_CONNECTIONS:   getEnvAsInt("MAX_CONNECTIONS", 100),
-			READ_BUFFER_SIZE:  getEnvAsInt("READ_BUFFER_SIZE", 1024),
-			WRITE_BUFFER_SIZE: getEnvAsInt("WRITE_BUFFER_SIZE", 1024),
-			PONG_WAIT:         getEnvAsInt("PONG_WAIT", 60),
-			PING_PERIOD:       getEnvAsInt("PING_WAIT", 50),
-			WRITE_WAIT:        getEnvAsInt("WRITE_WAIT", 10),
-			MAX_MESSAGE:       getEnvAsInt("MAX_MESSAGE", 512),
+			CHAT_ROOMS: getEnvAsListStr("CHAT_ROOMS", "general"),
 		},
 	}
 
@@ -72,21 +51,17 @@ func LoadConfig() (*Config, error) {
 	return cfg, nil
 }
 
-func getEnvAsStr(key string, fallback string) string {
+func getEnvAsStr(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 	return fallback
 }
 
-func getEnvAsInt(key string, fallback int) int {
+func getEnvAsListStr(key, fallback string) []string {
 	if value, exists := os.LookupEnv(key); exists {
-		result, err := strconv.Atoi(value)
-
-		if err != nil {
-			return result
-		}
+		return strings.Split(value, ",")
 	}
 
-	return fallback
+	return []string{fallback}
 }
