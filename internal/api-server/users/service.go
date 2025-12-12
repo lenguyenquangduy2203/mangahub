@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	manga "mangahub/internal/mangas"
+	manga "mangahub/internal/api-server/mangas"
 	platform_errors "mangahub/pkg/errors"
 	"mangahub/pkg/models"
 )
@@ -92,6 +92,7 @@ func _convertToLibraryItems(ul []models.UserLibrary) []models.LibraryItem {
 	for _, item := range ul {
 		items = append(items, models.LibraryItem{
 			MangaID:        item.MangaID,
+			Title:          item.Manga.Title,
 			CurrentChapter: item.CurrentChapter,
 			Status:         item.Status,
 			UpdatedAt:      item.UpdatedAt,

@@ -79,7 +79,7 @@ func (ul *UserLibrary) BeforeUpdate(tx *gorm.DB) error {
 
 	if ul.CurrentChapter == manga.TotalChapters && manga.Status == enums.MANGA_COMPLETED.StringUpper() {
 		ul.Status = enums.READING_COMPLETED.StringUpper()
-	} else if ul.CurrentChapter < manga.TotalChapters && ul.CurrentChapter > 0 {
+	} else if ul.CurrentChapter <= manga.TotalChapters && ul.CurrentChapter > 0 {
 		ul.Status = enums.READING_READING.StringUpper()
 	} else {
 		return platform_errors.ErrInValidCurrentChapter
@@ -119,6 +119,7 @@ type ReadingList struct {
 
 type LibraryItem struct {
 	MangaID        string
+	Title          string
 	CurrentChapter int
 	Status         string
 	UpdatedAt      time.Time

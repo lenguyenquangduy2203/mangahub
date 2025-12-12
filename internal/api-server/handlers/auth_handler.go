@@ -47,7 +47,7 @@ func (h *AuthHandler) RegisterV1(ctx *gin.Context) {
 		if errors.Is(err, auth.ErrUserConflict) {
 			ctx.JSON(http.StatusConflict, dtos.ErrorResponse{
 				Code:    "RESOURCE_CONFLICT",
-				Message: "The requested username is already in use",
+				Message: "The requested username is already in used",
 				Details: []dtos.ErrorDetail{
 					{
 						Field: "username",

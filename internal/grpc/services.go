@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 	"errors"
-	"mangahub/internal/mangas"
-	"mangahub/internal/users"
+	"mangahub/internal/api-server/mangas"
+	"mangahub/internal/api-server/users"
 	"mangahub/pkg/models"
 	mangapb "mangahub/proto/manga"
 	"strings"
