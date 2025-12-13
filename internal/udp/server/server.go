@@ -1,8 +1,10 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"mangahub/internal/udp/models"
 	"net"
 )
 
@@ -48,4 +50,25 @@ func (s *NotificationServer) addClient(client net.UDPAddr) {
 		}
 	}
 	s.Clients = append(s.Clients, client)
+}
+
+func (s *NotificationServer) Broadcast(notification models.Notification) {
+	data, err := json.Marshal(notification)
+	if err != nil {
+		log.Println("JSON marshal error:", err)
+		return
+	}
+
+	for _, client := range s.Clients {
+		conn, err := net.DialUDP("udp", nil, &client)
+		if err != nil {
+			log.Println("Dial error:", err)
+			continue
+		}
+		_, err = conn.Write(data)
+		if err != nil {
+			log.Println("Write error:", err)
+		}
+		conn.Close()
+	}
 }
