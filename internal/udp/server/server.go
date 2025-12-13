@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
-
 	"mangahub/internal/udp/models"
+	"net"
 )
 
 type NotificationServer struct {

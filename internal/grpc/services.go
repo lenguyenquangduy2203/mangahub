@@ -3,11 +3,14 @@ package grpc
 import (
 	"context"
 	"errors"
-	mangas2 "mangahub/internal/api-server/mangas"
-	users2 "mangahub/internal/api-server/users"
+	"mangahub/internal/api-server/mangas"
+	"mangahub/internal/api-server/users"
 	"mangahub/pkg/models"
 	mangapb "mangahub/proto/manga"
 	"strings"
+
+	"mangahub/internal/tcp/client"
+	update "mangahub/internal/tcp/models"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,21 +18,23 @@ import (
 
 type MangaServiceServer struct {
 	mangapb.UnimplementedMangaServiceServer
-	userService  users2.Service
-	mangaService mangas2.Service
+	userService           users.UserLibraryService
+	mangaService          mangas.MangaService
+	tcpProgressSyncClient client.ProgressSync
 }
 
-func NewMangaServiceGrpcServer(userService users2.Service, mangaService mangas2.Service) *MangaServiceServer {
+func NewMangaServiceGrpcServer(userService users.UserLibraryService, mangaService mangas.MangaService, tcpClient client.ProgressSync) *MangaServiceServer {
 	return &MangaServiceServer{
-		userService:  userService,
-		mangaService: mangaService,
+		userService:           userService,
+		mangaService:          mangaService,
+		tcpProgressSyncClient: tcpClient,
 	}
 }
 
 func (s *MangaServiceServer) GetManga(ctx context.Context, req *mangapb.GetMangaRequest) (*mangapb.MangaResponse, error) {
 	manga, err := s.mangaService.Get(ctx, req.GetId())
 	if err != nil {
-		if errors.Is(err, mangas2.ErrMangaNotExistInDatabase) {
+		if errors.Is(err, mangas.ErrMangaNotExistInDatabase) {
 			return nil, status.Errorf(codes.NotFound, "manga not found: %s", req.GetId())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get manga: %v", err)
@@ -82,17 +87,23 @@ func (s *MangaServiceServer) SearchManga(ctx context.Context, req *mangapb.Searc
 func (s *MangaServiceServer) UpdateProgress(ctx context.Context, req *mangapb.ProgressRequest) (*mangapb.ProgressResponse, error) {
 	err := s.userService.UpdateUserReadingProgress(ctx, req.GetUserId(), req.GetMangaId(), int(req.GetChapter()))
 	if err != nil {
-		if errors.Is(err, mangas2.ErrMangaNotExistInDatabase) {
+		if errors.Is(err, mangas.ErrMangaNotExistInDatabase) {
 			return nil, status.Error(codes.NotFound, "manga not found in database")
 		}
-		if errors.Is(err, users2.ErrMangaNotExistInUserLibrary) {
+		if errors.Is(err, users.ErrMangaNotExistInUserLibrary) {
 			return nil, status.Error(codes.NotFound, "manga not found in user library")
 		}
-		if errors.Is(err, mangas2.ErrInValidCurrentChapter) {
+		if errors.Is(err, mangas.ErrInValidCurrentChapter) {
 			return nil, status.Error(codes.InvalidArgument, "invalid chapter number")
 		}
 		return nil, status.Errorf(codes.Internal, "update progress failed: %v", err)
 	}
+
+	s.tcpProgressSyncClient.Send(update.ProgressUpdate{
+		UserID:  req.GetUserId(),
+		MangaID: req.GetMangaId(),
+		Chapter: int(req.GetChapter()),
+	})
 
 	return &mangapb.ProgressResponse{
 		Ok: true,

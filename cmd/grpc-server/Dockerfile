@@ -35,6 +35,7 @@ RUN GO111MODULE=on go build -mod=mod -o grpc-server .
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/mangahub/cmd/grpc-server/grpc-server .
+COPY --from=builder /app/mangahub/cmd/grpc-server/grpc-server .
 ENV PORT=50051
 EXPOSE ${PORT}
 ENTRYPOINT ["./grpc-server"]
