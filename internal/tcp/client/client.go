@@ -15,8 +15,8 @@ type ProgressSyncClient struct {
 	addr string
 }
 
-func NewProgressSyncClient(addr string) *ProgressSyncClient {
-	return &ProgressSyncClient{addr: addr}
+func NewProgressSyncClient(addr string) ProgressSyncClient {
+	return ProgressSyncClient{addr: addr}
 }
 
 func (c *ProgressSyncClient) Connect() error {

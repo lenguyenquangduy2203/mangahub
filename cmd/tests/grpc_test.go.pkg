@@ -65,7 +65,7 @@ func (u UserServiceStub) UpdateUserReadingProgress(ctx context.Context, userID, 
 
 // ---- TCP Progress client stub ----
 type TCPClientStub struct {
-	client.ProgressSync
+	client.ProgressSyncClient
 	Sent []update.ProgressUpdate
 }
 
@@ -109,7 +109,7 @@ func TestGetManga_Success(t *testing.T) {
 	}
 
 	userStub := UserServiceStub{}
-	tcpStub := &TCPClientStub{}
+	tcpStub := client.ProgressSyncClient{}
 
 	server := mygrpc.NewMangaServiceGrpcServer(userStub, mangaStub, tcpStub)
 
@@ -138,7 +138,7 @@ func TestGetManga_NotFound(t *testing.T) {
 		},
 	}
 	userStub := UserServiceStub{}
-	tcpStub := &TCPClientStub{}
+	tcpStub := client.ProgressSyncClient{}
 
 	server := mygrpc.NewMangaServiceGrpcServer(userStub, mangaStub, tcpStub)
 
@@ -173,7 +173,7 @@ func TestSearchManga_Success(t *testing.T) {
 		},
 	}
 
-	server := mygrpc.NewMangaServiceGrpcServer(UserServiceStub{}, mangaStub, &TCPClientStub{})
+	server := mygrpc.NewMangaServiceGrpcServer(UserServiceStub{}, mangaStub, client.ProgressSyncClient{})
 
 	addr, stop := startGrpcTestServer(t, server)
 	defer stop()
@@ -199,7 +199,7 @@ func TestUpdateProgress_Success(t *testing.T) {
 		},
 	}
 
-	tcpStub := &TCPClientStub{}
+	tcpStub := client.NewProgressSyncClient()
 
 	server := mygrpc.NewMangaServiceGrpcServer(userStub, MangaServiceStub{}, tcpStub)
 
@@ -236,7 +236,7 @@ func TestUpdateProgress_InvalidChapter(t *testing.T) {
 		},
 	}
 
-	server := mygrpc.NewMangaServiceGrpcServer(userStub, MangaServiceStub{}, &TCPClientStub{})
+	server := mygrpc.NewMangaServiceGrpcServer(userStub, MangaServiceStub{}, client.ProgressSyncClient{})
 
 	addr, stop := startGrpcTestServer(t, server)
 	defer stop()

@@ -10,4 +10,6 @@ func main() {
 	if err := srv.Start(); err != nil {
 		log.Fatalf("TCP server error: %v", err)
 	}
+
+	select {}
 }

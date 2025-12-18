@@ -18,8 +18,9 @@ COPY proto/manga/ ./proto/manga/
 
 # Copy internal packages
 COPY internal/grpc/ ./internal/grpc/
-COPY internal/mangas/ ./internal/mangas/
-COPY internal/users/ ./internal/users/
+COPY internal/tcp/ ./internal/tcp/
+COPY internal/api-server/mangas/ ./internal/api-server/mangas/
+COPY internal/api-server/users/ ./internal/api-server/users/
 
 # Copy pkg packages
 COPY pkg/errors/ ./pkg/errors/

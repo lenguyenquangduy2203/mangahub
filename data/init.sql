@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS manga (
     status TEXT,
     total_chapters INTEGER,
     description TEXT,
-    mangaupdates_id INTEGER UNIQUE NULLABLE,
+    mangaupdates_id INTEGER UNIQUE NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_library (

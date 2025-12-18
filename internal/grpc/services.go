@@ -20,10 +20,10 @@ type MangaServiceServer struct {
 	mangapb.UnimplementedMangaServiceServer
 	userService           users.UserLibraryService
 	mangaService          mangas.MangaService
-	tcpProgressSyncClient client.ProgressSync
+	tcpProgressSyncClient client.ProgressSyncClient
 }
 
-func NewMangaServiceGrpcServer(userService users.UserLibraryService, mangaService mangas.MangaService, tcpClient client.ProgressSync) *MangaServiceServer {
+func NewMangaServiceGrpcServer(userService users.UserLibraryService, mangaService mangas.MangaService, tcpClient client.ProgressSyncClient) *MangaServiceServer {
 	return &MangaServiceServer{
 		userService:           userService,
 		mangaService:          mangaService,

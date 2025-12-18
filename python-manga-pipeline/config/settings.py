@@ -18,4 +18,4 @@ SCHEDULE_HOURS = 6
 # INIT_PATH = os.path.join(OUTPUT_PATH, INIT_FILE)
 # UPDATE_PATH = os.path.join(OUTPUT_PATH, UPDATE_FILE)
 
-DB_PATH = os.getenv("DB_PATH", "./data/mangahub.db")
+DB_PATH = os.getenv("PIPELINE_DB_PATH", "./data/mangahub.db")

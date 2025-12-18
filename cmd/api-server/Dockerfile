@@ -17,8 +17,7 @@ COPY cmd/api-server/go.mod ./cmd/api-server/
 # Copy internal packages
 COPY internal/api-server/ ./internal/api-server/
 COPY internal/auth/ ./internal/auth/
-COPY internal/manga/ ./internal/manga/
-COPY internal/user/ ./internal/user/
+COPY internal/socket/ ./internal/socket/
 
 # Copy pkg packages
 COPY pkg/errors/ ./pkg/errors/

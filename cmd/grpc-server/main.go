@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
+	"mangahub/internal/api-server/mangas"
+	"mangahub/internal/api-server/users"
 	grpcsrv "mangahub/internal/grpc"
-	"mangahub/internal/mangas"
 	"mangahub/internal/tcp/client"
-	"mangahub/internal/users"
 	"mangahub/pkg/utils/config"
 	"mangahub/pkg/utils/database"
 	mangapb "mangahub/proto/manga"
@@ -30,13 +30,13 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	progressClient := client.NewProgressSyncClient("tcp-server-container:9000")
+	progressClient := client.NewProgressSyncClient("mangahub-tcp:9000")
 	if err := progressClient.Connect(); err != nil {
 		log.Fatalf("TCP client error: %v", err)
 	}
 
 	// Initialize Database Connection
-	dbConnector, err := database.NewDatabaseConnection(cfg.DB_PATH)
+	dbConnector, err := database.NewDatabaseConnection(cfg.API_CONFIG.DB_PATH)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -52,7 +52,7 @@ func main() {
 	// Service
 	userService := users.NewService(userRepo)
 	mangaService := mangas.NewService(mangaRepo)
-	mangaGrpcService := grpcsrv.NewMangaServiceGrpcServer(*userService, *mangaService, progressClient)
+	mangaGrpcService := grpcsrv.NewMangaServiceGrpcServer(userService, mangaService, progressClient)
 
 	mangapb.RegisterMangaServiceServer(s, mangaGrpcService)
 
@@ -60,4 +60,6 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
+
+	select {}
 }
