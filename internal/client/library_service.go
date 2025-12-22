@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"mangahub/pkg/models/dtos"
-	"mangahub/pkg/utils"
 	"mangahub/pkg/utils/colors"
 	"net/http"
 	"net/url"
@@ -19,7 +18,7 @@ import (
 	"time"
 )
 
-func AddMangaOrUpdateToLibrary(mode, token, mangaId string, currentChapter int) (string, error) {
+func (c *Client) AddMangaOrUpdateToLibrary(mode, token, mangaId string, currentChapter int) (string, error) {
 	mangaData := map[string]interface{}{
 		"manga_id":        mangaId,
 		"current_chapter": currentChapter,
@@ -29,11 +28,13 @@ func AddMangaOrUpdateToLibrary(mode, token, mangaId string, currentChapter int) 
 	var request *http.Request
 	var err error
 
+	endpoint := fmt.Sprintf("%s/users/library", c.Config.ServerURL)
+
 	switch mode {
 	case "add":
-		request, err = http.NewRequest("POST", utils.BaseURL+"/users/library", bytes.NewBuffer(jsonData))
+		request, err = http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))
 	case "update":
-		request, err = http.NewRequest("PUT", utils.BaseURL+"/users/library", bytes.NewBuffer(jsonData))
+		request, err = http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonData))
 	default:
 		return "", errors.New("invalid mode")
 	}
@@ -45,7 +46,10 @@ func AddMangaOrUpdateToLibrary(mode, token, mangaId string, currentChapter int) 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+strings.TrimSpace(token))
 
-	resp, _ := http.DefaultClient.Do(request)
+	resp, err := c.HttpClient.Do(request)
+	if err != nil {
+		return "", err
+	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -67,25 +71,33 @@ func AddMangaOrUpdateToLibrary(mode, token, mangaId string, currentChapter int) 
 	return result.Message, nil
 }
 
-func GetReadingList(token, status string, limit, page int) (any, error) {
-	uri := "/users/library"
-
+func (c *Client) GetReadingList(token, status string, limit, page int) (any, error) {
+	// Build Query Parameters
+	v := url.Values{}
 	if status != "" {
-		uri +=
-			"?status=" + url.QueryEscape(status) +
-				"&limit=" + strconv.Itoa(limit) +
-				"&page=" + strconv.Itoa(page)
+		v.Set("status", status)
+		v.Set("limit", strconv.Itoa(limit))
+		v.Set("page", strconv.Itoa(page))
 	}
 
-	request, err := http.NewRequest("GET", utils.BaseURL+uri, nil)
+	// Construct URL
+	reqUrl := fmt.Sprintf("%s/users/library", c.Config.ServerURL)
+	if len(v) > 0 {
+		reqUrl += "?" + v.Encode()
+	}
 
+	request, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	request.Header.Set("Authorization", "Bearer "+strings.TrimSpace(token))
 
-	resp, _ := http.DefaultClient.Do(request)
+	// Use c.HttpClient
+	resp, err := c.HttpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -104,7 +116,6 @@ func GetReadingList(token, status string, limit, page int) (any, error) {
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			return nil, err
 		}
-
 		return &result, nil
 	}
 

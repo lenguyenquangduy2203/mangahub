@@ -32,7 +32,7 @@ func LoadConfig() (*Config, error) {
 
 	cfg := &Config{
 		API_CONFIG: APIConfig{
-			API_PORT:                  getEnvAsStr("PORT", "3000"),                  // Fallback to 3000
+			API_PORT:                  getEnvAsStr("API_PORT", "3000"),              // Fallback to 3000
 			DB_PATH:                   getEnvAsStr("DB_PATH", "./data/mangahub.db"), // Fallback path
 			JWT_SECRET:                getEnvAsStr("JWT_SECRET", "super-secret-key"),
 			JWT_ACCESS_TOKEN_LIFETIME: getEnvAsStr("JWT_ACCESS_TOKEN_LIFETIME", "4h"),

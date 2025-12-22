@@ -108,8 +108,3 @@ coverage/
 # Uncomment if you have custom config
 config.yaml
 config.local.yaml
-
-# ==============================
-# Ignore Rust build artifacts
-# ==============================
-*target/

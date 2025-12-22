@@ -21,7 +21,7 @@ services:
     volumes:
       - ./data:/data
     environment:
-      - PORT=${API_PORT}
+      - API_PORT=${API_PORT}
       - DB_PATH=${DB_PATH}
     ports:
       - "${API_PORT}:${API_PORT}"

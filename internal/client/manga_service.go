@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"mangahub/pkg/models/dtos"
-	"mangahub/pkg/utils"
 	"mangahub/pkg/utils/colors"
 	"net/http"
 	"net/url"
@@ -16,8 +15,10 @@ import (
 	"text/tabwriter"
 )
 
-func GetMangaById(mangaId string) (*dtos.MangaDetail, error) {
-	resp, err := http.Get(utils.BaseURL + "/manga/" + mangaId)
+func (c *Client) GetMangaById(mangaId string) (*dtos.MangaDetail, error) {
+	reqUrl := fmt.Sprintf("%s/manga/%s", c.Config.ServerURL, mangaId)
+
+	resp, err := c.HttpClient.Get(reqUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -42,27 +43,27 @@ func GetMangaById(mangaId string) (*dtos.MangaDetail, error) {
 	return &result, nil
 }
 
-func SearchManga(title, author, genre, status string, limit, page int) (*dtos.PaginatedResponse[dtos.MangaListItem], error) {
-	query := "?limit=" + strconv.Itoa(limit) + "&page=" + strconv.Itoa(page)
-
+func (c *Client) SearchManga(title, author, genre, status string, limit, page int) (*dtos.PaginatedResponse[dtos.MangaListItem], error) {
+	// Build the Query
+	v := url.Values{}
+	v.Set("limit", strconv.Itoa(limit))
+	v.Set("page", strconv.Itoa(page))
 	if title != "" {
-		query += "&title=" + url.QueryEscape(title)
+		v.Set("title", title)
 	}
-
 	if author != "" {
-		query += "&author=" + url.QueryEscape(author)
+		v.Set("author", author)
 	}
-
 	if genre != "" {
-		query += "&genre=" + url.QueryEscape(genre)
+		v.Set("genre", genre)
 	}
-
 	if status != "" {
-		query += "&status=" + url.QueryEscape(status)
+		v.Set("status", status)
 	}
 
-	resp, err := http.Get(utils.BaseURL + "/manga" + query)
+	reqUrl := fmt.Sprintf("%s/manga?%s", c.Config.ServerURL, v.Encode())
 
+	resp, err := c.HttpClient.Get(reqUrl)
 	if err != nil {
 		return nil, err
 	}

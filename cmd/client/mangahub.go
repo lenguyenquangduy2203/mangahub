@@ -7,6 +7,7 @@ import (
 	"mangahub/internal/client"
 	"mangahub/pkg/models/dtos"
 	"mangahub/pkg/pagination"
+	"mangahub/pkg/utils/config"
 	"os"
 	"strings"
 
@@ -43,6 +44,8 @@ func normalizeArgs() {
 		}
 	}
 }
+
+var clientService *client.Client
 
 func main() {
 	normalizeArgs()
@@ -101,6 +104,10 @@ func main() {
 		return
 	}
 
+	// Load Services
+	cfg := config.LoadClientConfig()
+	clientService = client.NewClient(cfg)
+
 	// Switch Modes
 	switch *mode {
 	case "register":
@@ -108,7 +115,7 @@ func main() {
 			log.Fatal("Error: -user and -pass are required")
 		}
 
-		_, err := client.Register(*username, *password)
+		_, err := clientService.Register(*username, *password)
 		if err != nil {
 			log.Fatalf("Register failed: %v", err)
 		}
@@ -123,7 +130,7 @@ func main() {
 			}
 
 			fmt.Println("--- Searching ---", *searchTitle)
-			mangas, err := client.SearchManga(*searchTitle, *searchAuthor, *searchGenre, *searchStatus, *limit, *page)
+			mangas, err := clientService.SearchManga(*searchTitle, *searchAuthor, *searchGenre, *searchStatus, *limit, *page)
 
 			if err != nil {
 				log.Fatalf("Search failed: %v", err)
@@ -134,7 +141,7 @@ func main() {
 		} else {
 			fmt.Printf("--- Fetching Details for Manga ID: %s ---\n", *mangaId)
 
-			manga, err := client.GetMangaById(*mangaId)
+			manga, err := clientService.GetMangaById(*mangaId)
 			if err != nil {
 				log.Fatalf("Fetch Details failed: %v", err)
 			}
@@ -149,7 +156,7 @@ func main() {
 			caser := cases.Title(language.English)
 			fmt.Printf("--- %s manga in user library ---\n", caser.String(*libAction))
 
-			msg, err := client.AddMangaOrUpdateToLibrary(*libAction, token, *mangaId, *currentChapter)
+			msg, err := clientService.AddMangaOrUpdateToLibrary(*libAction, token, *mangaId, *currentChapter)
 
 			if err != nil {
 				log.Fatalf("%s failed: %v", caser.String(*libAction), err)
@@ -159,7 +166,7 @@ func main() {
 
 		} else if *libAction == "get" {
 			fmt.Println("--- Get reading lists in user library ---")
-			list, err := client.GetReadingList(token, *searchStatus, *limit, *page)
+			list, err := clientService.GetReadingList(token, *searchStatus, *limit, *page)
 
 			if err != nil {
 				log.Fatalf("Get Reading lists failed: %v", err)
@@ -179,7 +186,7 @@ func main() {
 
 	case "chat":
 		token := getAuth(username, password)
-		client.StartChat(token, *room, *username)
+		clientService.StartChat(token, *room, *username)
 
 	default:
 		log.Fatalf("Unknown mode: %s.", *mode)
@@ -193,7 +200,7 @@ func getAuth(username, password *string) string {
 	}
 
 	fmt.Println("\uF09C Authenticating...")
-	token, err := client.Login(*username, *password)
+	token, err := clientService.Login(*username, *password)
 	if err != nil {
 		log.Fatalf("Login failed: %v", err)
 	}

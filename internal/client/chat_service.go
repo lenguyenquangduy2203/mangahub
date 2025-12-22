@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"mangahub/pkg/models/dtos"
-	"mangahub/pkg/utils"
 	"mangahub/pkg/utils/colors"
 	"net/http"
 	"net/url"
@@ -19,11 +18,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func StartChat(token, room, username string) {
+func (c *Client) StartChat(token, room, username string) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u, err := url.Parse(utils.WsURL)
+	u, err := url.Parse(c.Config.WsURL)
 	if err != nil {
 		log.Fatalf("Invalid base url (%v)", err)
 	}
@@ -32,6 +31,7 @@ func StartChat(token, room, username string) {
 	q.Set("room", room)
 	u.RawQuery = q.Encode()
 
+	// UI Setup
 	fmt.Print("\033[H\033[2J")
 	fmt.Printf("%sWelcome to MangaHub Chat!%s\n", colors.ColorPurple, colors.ColorReset)
 	fmt.Printf("Room: %s%s%s | User: %s%s%s\n", colors.ColorCyan, room, colors.ColorReset, colors.ColorGreen, username, colors.ColorReset)
@@ -40,14 +40,12 @@ func StartChat(token, room, username string) {
 	requestHeader := http.Header{}
 	requestHeader.Add("Authorization", "Bearer "+strings.TrimSpace(token))
 
-	c, resp, err := websocket.DefaultDialer.Dial(u.String(), requestHeader)
+	// Dialing the connection
+	conn, resp, err := websocket.DefaultDialer.Dial(u.String(), requestHeader)
 	if err != nil {
 		if resp != nil {
 			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					log.Fatal(err)
-				}
+				_ = Body.Close()
 			}(resp.Body)
 
 			if resp.StatusCode != http.StatusOK {
@@ -55,18 +53,14 @@ func StartChat(token, room, username string) {
 				log.Fatalf("Status %d: %s", resp.StatusCode, string(body))
 			}
 		}
-
 		log.Fatalf("%sDial error: %v%s", colors.ColorRed, err, colors.ColorReset)
 	}
 
 	fmt.Println("\U000F0789 Connected! Type a message and press Enter (Ctrl+C to quit).")
 
-	defer func(c *websocket.Conn) {
-		err := c.Close()
-		if err != nil {
-			log.Printf("%sError closing connection: %v%s", colors.ColorRed, err, colors.ColorReset)
-		}
-	}(c)
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	done := make(chan struct{})
 
@@ -74,12 +68,11 @@ func StartChat(token, room, username string) {
 	go func() {
 		defer close(done)
 		for {
-			_, rawMsg, err := c.ReadMessage()
+			_, rawMsg, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
 
-			// Parse the JSON message
 			var msg dtos.Message
 			if err := json.Unmarshal(rawMsg, &msg); err != nil {
 				fmt.Printf("\r%s[System] %s%s\n> ", colors.ColorYellow, string(rawMsg), colors.ColorReset)
@@ -93,9 +86,9 @@ func StartChat(token, room, username string) {
 				}
 			}
 
+			// Clear current line to prevent overwriting user input
 			fmt.Print("\r\033[K")
 
-			// Render based on message type
 			switch msg.Type {
 			case "chat":
 				if msg.Username == username {
@@ -108,7 +101,6 @@ func StartChat(token, room, username string) {
 			case "leave":
 				fmt.Printf("%s\U000F0A48 %s.%s\n", colors.ColorBlue, msg.Text, colors.ColorReset)
 			default:
-				// Generic fallback
 				fmt.Printf("[%s] %s: %s\n", displayTime, msg.Username, msg.Text)
 			}
 
@@ -140,27 +132,21 @@ func StartChat(token, room, username string) {
 				continue
 			}
 
-			fmt.Print("\033[1A\033[K")
+			fmt.Print("\033[1A\033[K") // Clear input line
 
-			// Send Message
-			msg := dtos.Message{
-				Type: "chat",
-				Text: text,
-			}
+			msg := dtos.Message{Type: "chat", Text: text}
 			jsonMsg, _ := json.Marshal(msg)
 
-			err := c.WriteMessage(websocket.TextMessage, jsonMsg)
-			if err != nil {
+			if err := conn.WriteMessage(websocket.TextMessage, jsonMsg); err != nil {
 				log.Println("Write error:", err)
 				return
 			}
 
 		case <-interrupt:
 			fmt.Println("\n\U000F1821 Exiting chat...")
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				return
-			}
+			// Send graceful close message
+			_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+
 			select {
 			case <-done:
 			case <-time.After(time.Second):
