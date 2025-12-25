@@ -1,0 +1,59 @@
+asyncapi: 2.6.0
+info:
+  title: MangaHub Chat WebSocket API
+  version: 1.0.0
+
+servers:
+  development:
+    url: wss://localhost:8080/api/{version}/ws
+    protocol: wss
+    description: MangaHub WebSocket server
+    variables:
+      version:
+        default: v1
+
+channels:
+  chat:
+    description: WebSocket connection where clients join a room via query parameter (?room=).
+    parameters:
+      room:
+        description: Name of the chat room. Must be one of predefined rooms ['general', 'manga', 'offtopic'].
+        schema:
+          type: string
+
+    subscribe:
+      summary: Events sent from server → client
+      message:
+        $ref: '#/components/messages/ServerEvent'
+
+    publish:
+      summary: Events sent from client → server
+      message:
+        $ref: '#/components/messages/ClientEvent'
+
+components:
+  messages:
+    ServerEvent:
+      payload:
+        type: object
+        properties:
+          type:
+            enum: [join, leave, chat, error]
+          username:
+            type: string
+          room:
+            type: string
+          text:
+            type: string
+          time:
+            type: string
+            format: date-time
+
+    ClientEvent:
+      payload:
+        type: object
+        properties:
+          type:
+            enum: [chat]
+          text:
+            type: string

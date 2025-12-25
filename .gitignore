@@ -86,6 +86,7 @@ coverage/
 *.swo
 *.bak
 *.orig
+:memory:
 
 # Backup and editor temp files
 *#*

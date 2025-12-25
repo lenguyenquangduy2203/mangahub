@@ -13,23 +13,23 @@ services:
     restart: "no"
   api-server:
     build:
-      context: ./cmd/api-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/api-server/Dockerfile
     container_name: mangahub-api
     depends_on:
       - db-init
     volumes:
       - ./data:/data
     environment:
-      - PORT=${API_PORT}
+      - API_PORT=${API_PORT}
       - DB_PATH=${DB_PATH}
     ports:
       - "${API_PORT}:${API_PORT}"
 
   tcp-server:
     build:
-      context: ./cmd/tcp-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/tcp-server/Dockerfile
     container_name: mangahub-tcp
     depends_on:
       - db-init
@@ -43,8 +43,8 @@ services:
 
   udp-server:
     build:
-      context: ./cmd/udp-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/udp-server/Dockerfile
     container_name: mangahub-udp
     depends_on:
       - db-init
@@ -54,15 +54,16 @@ services:
       - PORT=${UDP_PORT}
       - DB_PATH=${DB_PATH}
     ports:
-      - "${UDP_PORT}:${UDP_PORT}/udp"
+      - "${UDP_PORT}:${UDP_PORT}"
 
   grpc-server:
     build:
-      context: ./cmd/grpc-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cmd/grpc-server/Dockerfile
     container_name: mangahub-grpc
     depends_on:
       - db-init
+      - tcp-server
     volumes:
       - ./data:/data
     environment:

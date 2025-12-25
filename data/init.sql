@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS user (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE,
     password_hash TEXT,
@@ -12,10 +12,11 @@ CREATE TABLE IF NOT EXISTS manga (
     genres TEXT, -- JSON array as text
     status TEXT,
     total_chapters INTEGER,
-    description TEXT
+    description TEXT,
+    mangaupdates_id INTEGER UNIQUE NULL
 );
 
-CREATE TABLE IF NOT EXISTS user_progress (
+CREATE TABLE IF NOT EXISTS user_library (
     user_id TEXT,
     manga_id TEXT,
     current_chapter INTEGER,
